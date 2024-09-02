@@ -1,0 +1,12 @@
+# Чёрный лист - всё, кроме белого листа
+# TODO: корректные файлы
+*
+
+# Белый лист
+!/bin
+!/bia_incident
+!/model
+!/configs
+!/ml_data_engine
+!main.py
+!pyproject.toml
