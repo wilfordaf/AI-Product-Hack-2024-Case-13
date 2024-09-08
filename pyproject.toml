@@ -9,6 +9,8 @@ python = "^3.11"
 pandas = ">=2.2.0"
 fastapi = ">=0.104.1"
 uvicorn = "0.24.0"
+psutil = "^6.0.0"
+prometheus-fastapi-instrumentator = "^7.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.3"
@@ -26,9 +28,8 @@ build-backend = "poetry.core.masonry.api"
 [virtualenvs]
 in-project = true
 
-# TODO: Правильный путь
 [tool.pytest.ini_options]
-addopts = "--cov=bia_incident"
+addopts = "--cov=src"
 testpaths = ["tests"]
 markers = ["skip_tox"]
 
@@ -52,9 +53,8 @@ exclude_also = [
 
 ignore_errors = true
 
-# TODO: Правильный путь
 [tool.mypy]
-mypy_path = "bia_incident"
+mypy_path = "src"
 check_untyped_defs = true
 disallow_any_generics = true
 ignore_missing_imports = true
