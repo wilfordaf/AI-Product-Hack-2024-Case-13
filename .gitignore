@@ -163,3 +163,8 @@ cython_debug/
 # docker
 docker/**/*
 !docker/init.sh
+
+models/**
+data/raw/**
+data/interim/**
+data/processed/**
