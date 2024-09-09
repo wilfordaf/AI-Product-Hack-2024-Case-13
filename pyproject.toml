@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "case_13"
+name = "src"
 version = "0.0.1"
 description = "AI Product Hack Case 13"
 authors = [
