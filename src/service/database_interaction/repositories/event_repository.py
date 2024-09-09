@@ -11,8 +11,16 @@ class EventRepository:
     def __init__(self, session: Session):
         self._session = session
 
-    def create(self, event_create_dto: EventCreateDTO) -> None:
-        event = Events(title=event_create_dto.title, description=event_create_dto.description)
+    def create(self, event_create_dto: EventCreateDTO, admin_id: int) -> None:
+        admin = self._session.query(Users).filter(Users.id == admin_id).first()
+        if not admin:
+            raise ValueError("Admin user not found")
+
+        event = Events(
+            title=event_create_dto.title,
+            description=event_create_dto.description,
+            admin=admin,  # Set the admin relationship
+        )
         self._session.add(event)
         self._session.commit()
         self._session.refresh(event)
@@ -39,3 +47,14 @@ class EventRepository:
             event.users.append(user)
 
         self._session.commit()
+
+    def is_admin(self, event_title: str, user_telegram_id: str) -> bool:
+        event = self.read_by_title(event_title)
+        if not event:
+            return False
+
+        admin_user = self._session.query(Users).filter(Users.telegram_id == user_telegram_id).first()
+        if not admin_user:
+            return False
+
+        return event.admin_id == admin_user.id

@@ -14,3 +14,4 @@ class Users(Base):
 
     events = relationship("Events", secondary=users_events, back_populates="users")
     tags = relationship("Tags", secondary=users_tags, back_populates="users")
+    admin_events = relationship("Events", back_populates="admin")
