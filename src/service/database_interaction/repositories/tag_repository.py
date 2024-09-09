@@ -28,6 +28,6 @@ class TagRepository:
         self._session.delete(tag)
         self._session.commit()
 
-    def get_all_tag_names(self) -> List[str]:
-        tag_titles = self._session.query(Tags.title).all()
-        return [title for (title,) in tag_titles]
+    def get_all_tags(self) -> List[TagDTO]:
+        tags = self._session.query(Tags).all()
+        return [TagDTO.model_validate(tag) for tag in tags]
