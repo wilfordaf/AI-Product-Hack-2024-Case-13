@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -27,3 +27,7 @@ class TagRepository:
 
         self._session.delete(tag)
         self._session.commit()
+
+    def get_all_tag_names(self) -> List[str]:
+        tag_titles = self._session.query(Tags.title).all()
+        return [title for (title,) in tag_titles]
