@@ -2,24 +2,13 @@
 name = "case_13"
 version = "0.0.1"
 description = "AI Product Hack Case 13"
-authors = [
-    "Sergey Yurpalov", 
-    "Ilia Khrustalev", 
-    "Dmitry Alshevskiy", 
-    "Semen Serov", 
-    "Grigory Karsakov"
-]
+authors = ["Sergey Yurpalov"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 pandas = ">=2.2.0"
 fastapi = ">=0.104.1"
 uvicorn = "0.24.0"
-psutil = "^6.0.0"
-prometheus-fastapi-instrumentator = "^7.0.0"
-sqlalchemy = "^2.0.34"
-psycopg2-binary = "^2.9.9"
-requests = "^2.32.3"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.3"
@@ -29,7 +18,6 @@ mypy = ">=1.6.1"
 flake8 = ">=6.1.0"
 tox = ">=4.11.3"
 pandas-stubs = ">=2.1.4.231227"
-types-requests = "^2.32.0.20240907"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -38,8 +26,9 @@ build-backend = "poetry.core.masonry.api"
 [virtualenvs]
 in-project = true
 
+# TODO: Правильный путь
 [tool.pytest.ini_options]
-addopts = "--cov=src"
+addopts = "--cov=bia_incident"
 testpaths = ["tests"]
 markers = ["skip_tox"]
 
@@ -63,8 +52,9 @@ exclude_also = [
 
 ignore_errors = true
 
+# TODO: Правильный путь
 [tool.mypy]
-mypy_path = "src"
+mypy_path = "bia_incident"
 check_untyped_defs = true
 disallow_any_generics = true
 ignore_missing_imports = true
