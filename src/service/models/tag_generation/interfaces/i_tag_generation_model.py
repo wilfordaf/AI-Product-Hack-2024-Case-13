@@ -14,6 +14,12 @@ class ITagGenerationModel(ABC):
         """
 
     @abstractmethod
+    def load_model(self) -> None:
+        """
+        Loads the model from disk or other storage. This method is called before generating tags.
+        """
+
+    @abstractmethod
     def generate_tags(self, text: str) -> List[str]:
         """
         Generate tags for the given text. The function should return a list of strings representing the generated tags.

@@ -40,6 +40,15 @@ class OllamaGenerationModel(ITagGenerationModel):
     def info(self) -> str:
         return f"OllamaGenerationModel v{self._version}"
 
+    def load_model(self) -> None:
+        try:
+            status_code = requests.get("http://localhost:11434", timeout=2).status_code
+        except requests.exceptions.RequestException as e:
+            raise ServiceError("Ollama server is not on host:port") from e
+
+        if status_code != 200:
+            raise ServiceError("Ollama installation is not proper")
+
     def generate_tags(self, text: str) -> List[str]:
         self._logger.debug(f"Generating tags for {text}")
         try:
