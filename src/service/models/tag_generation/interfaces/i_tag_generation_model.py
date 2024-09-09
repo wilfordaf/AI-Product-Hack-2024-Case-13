@@ -9,7 +9,7 @@ class ITagGenerationModel(ABC):
     @abstractmethod
     def info(self) -> TModelInfo:
         """
-        Returns information about the model, including its name and version. This is used to identify the model in the UI.
+        Returns information about the model, including its name and version.
         :return: Information about the model as a dictionary with keys 'name' and 'version'.
         """
 
