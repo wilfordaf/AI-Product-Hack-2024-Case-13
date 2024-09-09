@@ -20,6 +20,7 @@ prometheus-fastapi-instrumentator = "^7.0.0"
 sqlalchemy = "^2.0.34"
 psycopg2-binary = "^2.9.9"
 requests = "^2.32.3"
+pdfminer = "^20191125"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.3"
