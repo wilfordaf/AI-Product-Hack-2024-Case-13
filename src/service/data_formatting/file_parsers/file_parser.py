@@ -1,9 +1,8 @@
 import os.path
 from pathlib import Path
-from typing import Dict, Any
 
-from bia_incident.utils.exceptions import ServiceError
-from bia_incident.utils.file_parsers.interfaces import IFileParser
+from src.service.data_formatting.file_parsers.interfaces import IFileParser
+from src.service.utils.exceptions import ServiceError
 
 
 class FileParser(IFileParser):
@@ -18,11 +17,11 @@ class FileParser(IFileParser):
 
         self._filepath = filepath
 
-    def retrieve_data(self) -> Dict[str, Any]:
+    def retrieve_data(self) -> str:
         try:
             return self._parse_file()
         except Exception as e:
             raise ServiceError(f"При чтении файла {self._filepath} возникла ошибка: {str(e)}") from e
 
-    def _parse_file(self) -> Dict[str, Any]:
+    def _parse_file(self) -> str:
         raise NotImplementedError()
