@@ -100,7 +100,7 @@ async def ping() -> JSONResponse:
 )
 async def add_user(data: AddUserRequestBody) -> JSONResponse:
     logger.info("Request /user/add")
-    response = service.add_user(f"{data.title} {data.text}", data.issue_key)
+    response = service.get_add_user_response(data)
     header, body = response["header"], response["body"]
     return JSONResponse(content=body, headers=header)
 
@@ -115,7 +115,7 @@ async def add_user(data: AddUserRequestBody) -> JSONResponse:
 )
 async def add_tags_user(data: AddTagsUserRequestBody) -> JSONResponse:
     logger.info("Request /user/add-tags")
-    response = service.add_tags_to_user(f"{data.title} {data.text}", data.issue_key)
+    response = service.get_add_tags_to_user_response(data)
     header, body = response["header"], response["body"]
     return JSONResponse(content=body, headers=header)
 
