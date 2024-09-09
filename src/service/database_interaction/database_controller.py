@@ -1,8 +1,11 @@
 import os
+from typing import Any, Callable, List
 
 from sqlalchemy import create_engine, make_url
 from sqlalchemy.orm import sessionmaker
 
+from service.database_interaction.dto.tag.tag_dto import TagDTO
+from service.database_interaction.dto.user import UserCreateDTO, UserUpdateTagsDTO
 from service.database_interaction.repositories import (
     CategoryRepository,
     EventRepository,
@@ -38,4 +41,21 @@ class DatabaseController:
 
         self._logger = ConsoleLogger()
 
-    # TODO: верхнеуровневые методы взаимодействия
+    def add_user(self, user: UserCreateDTO) -> None:
+        self._execute_repository_method(self._user_repository.create, {"user_create_dto": user})
+
+    def update_user_tags(self, user_update_tags_dto: UserUpdateTagsDTO) -> None:
+        self._execute_repository_method(self._user_repository, {"user_update_dto": user_update_tags_dto})
+
+    def get_all_tags(self) -> List[TagDTO]:
+        return self._execute_repository_method(self._tag_repository.get_all_tags)
+
+    def _execute_repository_method(self, method: Callable[[Any], Any], **kwargs) -> Any:
+        try:
+            result = method(**kwargs)
+            self._logger.debug(f"{method.__name__} with {kwargs} executed successfully")
+            return result
+        except Exception as e:
+            msg = f"Failed to execute {method.__name__}: {e}"
+            self._logger.error(msg)
+            raise ServiceError(msg)
