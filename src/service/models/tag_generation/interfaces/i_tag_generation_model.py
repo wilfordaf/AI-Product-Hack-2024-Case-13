@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from service.custom_typing import TModelInfo
-
 
 class ITagGenerationModel(ABC):
     @property
     @abstractmethod
-    def info(self) -> TModelInfo:
+    def info(self) -> str:
         """
         Returns information about the model, including its name and version.
         :return: Information about the model as a dictionary with keys 'name' and 'version'.
