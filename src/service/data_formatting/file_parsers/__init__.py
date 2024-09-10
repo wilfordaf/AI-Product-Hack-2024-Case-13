@@ -1,5 +1,3 @@
-from .json_file_parser import JsonFileParser
-from .sql_file_parser import SQLFileParser
-from .yaml_file_parser import YamlFileParser
+from .parsing_methods import retrieve_json_data, retrieve_pdf_data
 
-__all__ = ["JsonFileParser", "YamlFileParser", "SQLFileParser"]
+__all__ = ["retrieve_json_data", "retrieve_pdf_data"]
