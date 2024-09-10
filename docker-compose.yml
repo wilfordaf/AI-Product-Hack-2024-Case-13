@@ -1,11 +1,38 @@
-version: '3'
+version: '3.9'
 
 services:
-  model-service:
-    container_name: case_13_service
+  fastapi:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
     ports:
       - "9090:9090"
-    command: ./bin/start-gunicorn.sh
+    depends_on:
+      - db
+    links:
+      - db:db
+    restart: always
+    networks:
+      - app-network
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:

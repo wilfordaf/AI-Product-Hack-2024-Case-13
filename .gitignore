@@ -168,3 +168,5 @@ models/**
 data/raw/**
 data/interim/**
 data/processed/**
+
+postgres_data/**
