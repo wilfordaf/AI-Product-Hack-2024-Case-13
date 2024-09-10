@@ -4,52 +4,28 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from starlette.responses import RedirectResponse
 
-from service.entities.api_models.input import (
-    AddTagsUserRequestBody,
+from src.service.entities.api_models.input import (
+    AddTagsByCVUserRequestBody,
+    AddTagsByDialogueUserRequestBody,
+    AddTagsByLinkUserRequestBody,
+    AddTagsByTextUserRequestBody,
     AddUserRequestBody,
+    GetIsAdminRequestBody,
     GetRankingUserRequestBody,
 )
-from service.entities.api_models.output import (
+from src.service.entities.api_models.output import (
     PingResponse,
     SuccessStatusResponse,
     UserRankingResponse,
 )
 from src.service.service_assembler import ServiceAssembler
 from src.service.utils.logging import ConsoleLogger
-from src.service.utils.monitoring import (
-    api_version,
-    cpu_utilization_percent,
-    log_levels_distribution,
-)
 
 warnings.filterwarnings("ignore")
 
 app = FastAPI(swagger_ui_parameters={"defaultModelsExpandDepth": -1})
-instrumentator = Instrumentator(
-    should_group_status_codes=False,
-    should_ignore_untemplated=True,
-    should_instrument_requests_inprogress=True,
-    excluded_handlers=["/openapi.json", "/favicon.ico"],
-    inprogress_name="in_progress",
-    inprogress_labels=True,
-)
-
-TRACKED_METRICS = [
-    metrics.requests(),
-    metrics.latency(),
-    cpu_utilization_percent(),
-    log_levels_distribution(),
-    api_version(),
-]
-
-for metric in TRACKED_METRICS:
-    instrumentator.add(metric)
-
-instrumentator.instrument(app, metric_namespace="bia_incident", metric_subsystem="bia_incident")
-instrumentator.expose(app, include_in_schema=False, should_gzip=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,16 +82,71 @@ async def add_user(data: AddUserRequestBody) -> JSONResponse:
 
 
 @app.post(
-    "/api/v1/user/add-tags",
-    description="Add new tags to the user",
+    "/api/v1/user/add-tags/text",
+    description="Add new tags to the user from text input",
     response_description="Success status",
     response_model=SuccessStatusResponse,
     tags=["API"],
     status_code=200,
 )
-async def add_tags_user(data: AddTagsUserRequestBody) -> JSONResponse:
-    logger.info("Request /user/add-tags")
-    response = service.get_add_tags_to_user_response(data)
+async def add_tags_by_text_user(data: AddTagsByTextUserRequestBody) -> JSONResponse:
+    logger.info("Request /user/add-tags/text")
+    response = service.get_add_tags_by_text_to_user_response(data)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.post(
+    "/api/v1/user/add-tags/link",
+    description="Add new tags to the user from link input",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def add_tags_by_link_user(data: AddTagsByLinkUserRequestBody) -> JSONResponse:
+    logger.info("Request /user/add-tags/link")
+    response = service.get_add_tags_by_link_to_user_response(data)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.post(
+    "/api/v1/user/add-tags/cv",
+    description="Add new tags to the user from cv input",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def add_tags_by_cv_user(data: AddTagsByCVUserRequestBody) -> JSONResponse:
+    logger.info("Request /user/add-tags/cv")
+
+    file_content = await data.file.read()
+    file_content_str = file_content.decode("utf-8")
+    input = AddTagsByTextUserRequestBody(telegram_id=data.telegram_id, text=file_content_str)
+
+    response = service.get_add_tags_by_cv_to_user_response(input)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.post(
+    "/api/v1/user/add-tags/dialogue",
+    description="Add new tags to the user from dialogue input",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def add_tags_by_dialogue_user(data: AddTagsByDialogueUserRequestBody) -> JSONResponse:
+    logger.info("Request /user/add-tags/cv")
+
+    file_content = await data.file.read()
+    file_content_str = file_content.decode("utf-8")
+    input = AddTagsByTextUserRequestBody(telegram_id=data.telegram_id, text=file_content_str)
+
+    response = service.get_add_tags_by_dialogue_to_user_response(input)
     header, body = response["header"], response["body"]
     return JSONResponse(content=body, headers=header)
 
@@ -123,14 +154,29 @@ async def add_tags_user(data: AddTagsUserRequestBody) -> JSONResponse:
 @app.post(
     "/api/v1/user/get-ranking",
     description="Get ranking of users",
-    response_description="Success status",
+    response_description="Ranking of users",
     response_model=UserRankingResponse,
     tags=["API"],
     status_code=200,
 )
-async def get_ranking_user(queue: str, data: GetRankingUserRequestBody) -> JSONResponse:
-    logger.info(f"Пришёл запрос predict в очередь {queue}")
-    response = service.get_predict_response(queue, f"{data.title} {data.text}", data.issue_key)
+async def get_ranking_user(data: GetRankingUserRequestBody) -> JSONResponse:
+    logger.info("Request /user/get-ranking")
+    response = service.get_user_ranking_response(data)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.post(
+    "/api/v1/user/is-admin",
+    description="Check if the user is admin",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def get_is_admin(data: GetIsAdminRequestBody) -> JSONResponse:
+    logger.info("Request /user/is-admin")
+    response = service.get_is_admin_response(data)
     header, body = response["header"], response["body"]
     return JSONResponse(content=body, headers=header)
 
