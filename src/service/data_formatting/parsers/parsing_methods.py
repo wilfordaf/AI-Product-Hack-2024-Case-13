@@ -17,7 +17,8 @@ def retrieve_pdf_data(text: str) -> str:
                 temp_file.write(text)
 
             with open(file_path) as temp_file:
-                return extract_text(temp_file)
+                extracted_text: str = extract_text(temp_file)
+                return extracted_text
     except Exception as e:
         raise ServiceError(f"При чтении pdf файла возникла ошибка: {str(e)}") from e
 
