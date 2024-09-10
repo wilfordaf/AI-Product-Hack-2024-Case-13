@@ -1,12 +1,11 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-from service.entities.api_models.input.add_tags_user_request_body import (
-    AddTagsUserRequestBody,
-)
 from src.service.custom_typing.endpoint_types import (
     TPingResponseBody,
     TSuccessResponseBody,
+    TUserRankingResponseBody,
 )
+from src.service.database_interaction.dto.tag import TagDTO
 from src.service.database_interaction.dto.user import UserCreateDTO, UserUpdateTagsDTO
 from src.service.entities.api_models.input import AddUserRequestBody
 from src.service.utils.logging import ConsoleLogger
@@ -35,14 +34,31 @@ class DataFormattingController:
         return self._format_base_response_header(models_info)
 
     @staticmethod
-    def format_add_tags_to_user_user_response_body(success: bool) -> TSuccessResponseBody:
+    def format_add_tags_to_user_response_body(success: bool) -> TSuccessResponseBody:
         return {"success": success}
+
+    def format_get_ranking_user_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_get_ranking_user_response_body(ranking_result: List[Tuple[str, List[str]]]) -> TUserRankingResponseBody:
+        return {"users": [{"telegram_id": telegram_id, "tags": tags} for telegram_id, tags in ranking_result]}
+
+    def format_get_is_admin_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_get_is_admin_response_body(is_admin: bool) -> TSuccessResponseBody:
+        return {"success": is_admin}
 
     def get_user_create_dto_by_request_body(self, request_body: AddUserRequestBody) -> UserCreateDTO:
         return UserCreateDTO(telegram_id=request_body.telegram_id)
 
-    def get_user_update_dto_by_request_body(self, request_body: AddTagsUserRequestBody) -> UserUpdateTagsDTO:
-        return UserUpdateTagsDTO(telegram_id=request_body.telegram_id, tag_titles=request_body.tags)
+    def get_user_update_dto(self, telegram_id: str, tags: List[str]) -> UserUpdateTagsDTO:
+        return UserUpdateTagsDTO(telegram_id=telegram_id, tag_titles=tags)
+
+    def get_all_tag_names_by_tags_dto(self, tags_dto: List[TagDTO]) -> List[str]:
+        return [tag.title for tag in tags_dto]
 
     def _format_base_response_header(self, models_info: List[str]) -> Dict[str, str]:
-        return self._api_version | {"model_{i}": model_info for i, model_info in enumerate(models_info, 1)}
+        return self._api_version | {f"model_{i}": model_info for i, model_info in enumerate(models_info, 1)}
