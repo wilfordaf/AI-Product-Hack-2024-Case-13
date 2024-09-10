@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 
 
 class IRankingModel(ABC):
@@ -18,11 +18,10 @@ class IRankingModel(ABC):
         """
 
     @abstractmethod
-    def perform_ranking(self, caller_telegram_id: str, n: int) -> List[str]:
+    def perform_ranking(self, caller_telegram_id: str, n: int) -> List[Tuple[str, List[str]]]:
         """
         Performs the ranking of users based on tags vectors.
-        The method returns a sorted list of top-n telegram ids.
         :param caller_telegram_id: Telegram id of the user who called the method.
         :param n: Number of users to return in the ranking.
-        :return: Sorted list of top-n telegram ids.
+        :return: Ordered tuples of (telegram_id, [matching_tags]).
         """
