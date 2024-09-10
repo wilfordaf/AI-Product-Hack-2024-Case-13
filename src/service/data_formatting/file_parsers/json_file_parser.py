@@ -18,5 +18,12 @@ class JsonFileParser(FileParser):
         with open(self._filepath, encoding="utf-8") as fin:
             content: Dict[str, Any] = json.load(fin)
 
-            return "\n".join([message for message in content['message'] if message['from_id'] == from_id])
+            n_messages = 200
+
+            messages_list = []
+            for message in content['messages']:
+                if message['from_id'] == from_id and len(messages_list) < n_messages:
+                    messages_list.append(message['text'])
+
+            return "\n".join(messages_list)
 
