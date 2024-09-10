@@ -28,7 +28,10 @@ def retrieve_json_data(filepath: Path, from_id: int) -> str:
         with open(filepath, encoding="utf-8") as fin:
             content: Dict[str, Any] = json.load(fin)
             return "\n".join(
-                [message["text"] for message in content["messages"][-n_messages:] if message["from_id"] == from_id]
+                [
+                    message["text"]
+                    for message in filter(lambda m: m["from_id"] == from_id, content["messages"])[-n_messages:]
+                ]
             )
     except Exception as e:
         raise ServiceError(f"При чтении файла {filepath} возникла ошибка: {str(e)}") from e
