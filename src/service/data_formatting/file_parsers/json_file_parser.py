@@ -10,5 +10,9 @@ class JsonFileParser(FileParser):
     def _parse_file(self) -> str:
         with open(self._filepath, encoding="utf-8") as fin:
             content: Dict[str, Any] = json.load(fin)
-            # TODO: Отфильтровать TG сообщения
-            return ""
+
+            text = ""
+            for message in content['messages']:
+                text += message['text'] + " "
+
+            return text
