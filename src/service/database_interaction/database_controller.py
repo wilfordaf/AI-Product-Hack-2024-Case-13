@@ -4,6 +4,10 @@ from typing import Any, Callable, List
 from sqlalchemy import create_engine, make_url
 from sqlalchemy.orm import sessionmaker
 
+from src.service.database_interaction.dto.event import (
+    EventCreateDTO,
+    EventUpdateUserDTO,
+)
 from src.service.database_interaction.dto.tag.tag_dto import TagDTO
 from src.service.database_interaction.dto.user import UserCreateDTO, UserUpdateTagsDTO
 from src.service.database_interaction.dto.user.user_dto import UserDTO
@@ -82,6 +86,15 @@ class DatabaseController:
             event_title=event_title,
         )
         return users
+
+    def add_event(self, event: EventCreateDTO) -> None:
+        self._execute_repository_method(self._event_repository.create, event_create_dto=event)
+
+    def add_user_to_event(self, event_update_user_dto: EventUpdateUserDTO) -> None:
+        self._execute_repository_method(
+            self._event_repository.add_user_to_event,
+            event_update_user_dto=event_update_user_dto,
+        )
 
     def _execute_repository_method(self, method: Callable[..., Any], **kwargs) -> Any:
         try:

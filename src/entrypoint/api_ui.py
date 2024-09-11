@@ -7,11 +7,13 @@ from fastapi.responses import JSONResponse
 from starlette.responses import RedirectResponse
 
 from src.service.entities.api_models.input import (
+    AddEventRequestBody,
     AddTagsByCVUserRequestBody,
     AddTagsByDialogueUserRequestBody,
     AddTagsByLinkUserRequestBody,
     AddTagsByTextUserRequestBody,
     AddUserRequestBody,
+    AddUserToEventRequestBody,
     GetIsAdminRequestBody,
     GetRankingUserRequestBody,
     GetTagsByUserRequestBody,
@@ -222,6 +224,36 @@ async def add_tags_by_dialogue_user(data: AddTagsByDialogueUserRequestBody) -> J
     input = AddTagsByTextUserRequestBody(telegram_id=data.telegram_id, text=file_content_str)
 
     response = service.get_add_tags_by_dialogue_to_user_response(input)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.post(
+    "/api/v1/event/add",
+    description="Add new event",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def add_event(data: AddEventRequestBody) -> JSONResponse:
+    logger.info("Request /event/add")
+    response = service.get_add_event_response(data)
+    header, body = response["header"], response["body"]
+    return JSONResponse(content=body, headers=header)
+
+
+@app.patch(
+    "/api/v1/event/add-user",
+    description="Add user to event",
+    response_description="Success status",
+    response_model=SuccessStatusResponse,
+    tags=["API"],
+    status_code=200,
+)
+async def add_user_to_event(data: AddUserToEventRequestBody) -> JSONResponse:
+    logger.info("Request /event/add-user")
+    response = service.get_add_user_to_event_response(data)
     header, body = response["header"], response["body"]
     return JSONResponse(content=body, headers=header)
 

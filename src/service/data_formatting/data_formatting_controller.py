@@ -6,13 +6,23 @@ from src.service.custom_typing.endpoint_types import (
     TTagTitlesResponse,
     TUserRankingResponseBody,
 )
+from src.service.database_interaction.dto.event import (
+    EventCreateDTO,
+    EventUpdateUserDTO,
+)
 from src.service.database_interaction.dto.tag import TagDTO
 from src.service.database_interaction.dto.user import (
     UserCreateDTO,
     UserDTO,
     UserUpdateTagsDTO,
 )
-from src.service.entities.api_models.input import AddUserRequestBody
+from src.service.entities.api_models.input import (
+    AddEventRequestBody,
+    AddUserRequestBody,
+)
+from src.service.entities.api_models.input.add_user_to_event_request_body import (
+    AddUserToEventRequestBody,
+)
 from src.service.utils.logging import ConsoleLogger
 
 
@@ -70,11 +80,35 @@ class DataFormattingController:
     def format_get_tags_by_user_response_body(tags: List[TagDTO]) -> TTagTitlesResponse:
         return {"tags": [tag.title for tag in tags]}
 
+    def format_add_event_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_add_event_response_body(success: bool) -> TSuccessResponseBody:
+        return {"success": success}
+
+    def format_add_user_to_event_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_add_user_to_event_response_body(success: bool) -> TSuccessResponseBody:
+        return {"success": success}
+
     def get_user_create_dto_by_request_body(self, request_body: AddUserRequestBody) -> UserCreateDTO:
         return UserCreateDTO(telegram_id=request_body.telegram_id)
 
     def get_user_update_dto(self, telegram_id: str, tags: List[str]) -> UserUpdateTagsDTO:
         return UserUpdateTagsDTO(telegram_id=telegram_id, tag_titles=tags)
+
+    def get_event_create_dto_by_request_body(self, request_body: AddEventRequestBody) -> EventCreateDTO:
+        return EventCreateDTO(
+            title=request_body.title,
+            description=request_body.description,
+            admin_telegram_id=request_body.admin_telegram_id,
+        )
+
+    def get_event_update_dto_by_request_body(self, request_body: AddUserToEventRequestBody) -> EventUpdateUserDTO:
+        return EventUpdateUserDTO(user_telegram_id=request_body.telegram_id, title=request_body.title)
 
     def get_all_tag_names_by_tags_dto(self, tags_dto: List[TagDTO]) -> List[str]:
         return [tag.title for tag in tags_dto]

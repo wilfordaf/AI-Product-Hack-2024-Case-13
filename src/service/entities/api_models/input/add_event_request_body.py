@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class EventCreateDTO(BaseModel):
+class AddEventRequestBody(BaseModel):
+    admin_telegram_id: str
     title: str
     description: str
-    admin_telegram_id: str

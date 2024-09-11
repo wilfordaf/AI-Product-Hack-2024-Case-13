@@ -13,10 +13,14 @@ from src.service.entities.api_models.input import (
     AddTagsByLinkUserRequestBody,
     AddTagsByTextUserRequestBody,
     AddUserRequestBody,
+    AddUserToEventRequestBody,
     GetIsAdminRequestBody,
     GetRankingUserRequestBody,
     GetTagsByUserRequestBody,
     GetUsersByEventRequestBody,
+)
+from src.service.entities.api_models.input.add_event_request_body import (
+    AddEventRequestBody,
 )
 from src.service.models.ranking import CosineRankingModel
 from src.service.models.tag_generation import OllamaGenerationModel
@@ -150,6 +154,36 @@ class ServiceAssembler:
             "body": self._data_formatting_controller.format_get_tags_by_user_response_body(tags),
         }
         self._logger.info(f"Formatted /user/get-tags response: {response}")
+        return response
+
+    def get_add_event_response(self, request_body: AddEventRequestBody) -> TGenericResponse:
+        event_create_dto = self._data_formatting_controller.get_event_create_dto_by_request_body(request_body)
+        try:
+            self._database_controller.add_event(event_create_dto)
+            success = True
+        except ServiceError:
+            success = False
+
+        response: TGenericResponse = {
+            "header": self._data_formatting_controller.format_add_event_response_header(self._models),
+            "body": self._data_formatting_controller.format_add_event_response_body(success),
+        }
+        self._logger.info(f"Formatted /event/add response: {response}")
+        return response
+
+    def get_add_user_to_event_response(self, request_body: AddUserToEventRequestBody) -> TGenericResponse:
+        event_update_dto = self._data_formatting_controller.get_event_update_dto_by_request_body(request_body)
+        try:
+            self._database_controller.add_user_to_event(event_update_dto)
+            success = True
+        except ServiceError:
+            success = False
+
+        response: TGenericResponse = {
+            "header": self._data_formatting_controller.format_add_user_to_event_response_header(self._models),
+            "body": self._data_formatting_controller.format_add_user_to_event_response_body(success),
+        }
+        self._logger.info(f"Formatted /event/add-user response: {response}")
         return response
 
     def _add_tags_to_user(self, telegram_id: str, tags: List[str]) -> TGenericResponse:

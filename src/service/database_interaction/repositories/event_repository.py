@@ -2,7 +2,11 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.service.database_interaction.dto.event import EventCreateDTO, EventDTO
+from src.service.database_interaction.dto.event import (
+    EventCreateDTO,
+    EventDTO,
+    EventUpdateUserDTO,
+)
 from src.service.database_interaction.dto.user import UserDTO
 from src.service.database_interaction.orm_models.events import Events
 from src.service.database_interaction.orm_models.users import Users
@@ -12,11 +16,11 @@ class EventRepository:
     def __init__(self, session_maker: sessionmaker[Session]):
         self._session_maker = session_maker
 
-    def create(self, event_create_dto: EventCreateDTO, admin_id: int) -> None:
+    def create(self, event_create_dto: EventCreateDTO) -> None:
         with self._session_maker() as session:
-            admin = session.query(Users).filter(Users.id == admin_id).first()
+            admin = session.query(Users).filter(Users.telegram_id == event_create_dto.admin_telegram_id).first()
             if not admin:
-                raise ValueError("Admin user not found")
+                return
 
             event = Events(
                 title=event_create_dto.title,
@@ -73,3 +77,17 @@ class EventRepository:
 
             users = event.users
             return [UserDTO.model_validate(user) for user in users]
+
+    def add_user_to_event(self, event_update_user_dto: EventUpdateUserDTO) -> None:
+        with self._session_maker() as session:
+            event = session.query(Events).filter(Events.title == event_update_user_dto.title).first()
+            if not event:
+                return
+
+            user = session.query(Users).filter(Users.telegram_id == event_update_user_dto.user_telegram_id).first()
+            if not user:
+                return
+
+            if user not in event.users:
+                event.users.append(user)
+                session.commit()
