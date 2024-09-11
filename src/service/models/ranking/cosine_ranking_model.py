@@ -25,5 +25,5 @@ class CosineRankingModel(IRankingModel):
     def load_model(self) -> None:
         pass
 
-    def perform_ranking(self, caller_telegram_id: str, n: int) -> List[Tuple[str, List[str]]]:
+    def perform_ranking(self, caller_telegram_id: str, event_user_ids, n: int) -> List[Tuple[str, List[str]]]:
         raise NotImplementedError("This method is not implemented in this class")

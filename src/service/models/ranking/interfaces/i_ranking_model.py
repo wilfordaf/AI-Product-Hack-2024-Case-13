@@ -18,10 +18,11 @@ class IRankingModel(ABC):
         """
 
     @abstractmethod
-    def perform_ranking(self, caller_telegram_id: str, n: int) -> List[Tuple[str, List[str]]]:
+    def perform_ranking(self, caller_telegram_id: str, event_user_ids, n: int) -> List[Tuple[str, List[str]]]:
         """
         Performs the ranking of users based on tags vectors.
         :param caller_telegram_id: Telegram id of the user who called the method.
+        :param event_user_ids: List of telegram ids of users who participated in the event.
         :param n: Number of users to return in the ranking.
         :return: Ordered tuples of (telegram_id, [matching_tags]).
         """
