@@ -67,4 +67,4 @@ class OllamaGenerationModel(ITagGenerationModel):
         return self._parse_response(response)
 
     def _parse_response(self, response: str) -> List[str]:
-        return [tag for tag in self._possible_tags if tag in response]
+        return list(set(tag for tag in self._possible_tags if tag in response))
