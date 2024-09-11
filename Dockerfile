@@ -1,10 +1,21 @@
-FROM python:3.11-alpine
+FROM python:3.11-slim
 WORKDIR /root/src
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update && apk add --no-cache bash && rm -rf /var/cache/apk/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libc-dev \
+    libffi-dev \
+    python3-dev \
+    g++ \
+    swig \
+    bash \
+    netcat-traditional \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN python -m pip install --upgrade pip
 
 COPY . src
