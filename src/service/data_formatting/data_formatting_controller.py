@@ -3,10 +3,15 @@ from typing import Dict, List, Tuple
 from src.service.custom_typing.endpoint_types import (
     TPingResponseBody,
     TSuccessResponseBody,
+    TTagTitlesResponse,
     TUserRankingResponseBody,
 )
 from src.service.database_interaction.dto.tag import TagDTO
-from src.service.database_interaction.dto.user import UserCreateDTO, UserUpdateTagsDTO
+from src.service.database_interaction.dto.user import (
+    UserCreateDTO,
+    UserDTO,
+    UserUpdateTagsDTO,
+)
 from src.service.entities.api_models.input import AddUserRequestBody
 from src.service.utils.logging import ConsoleLogger
 
@@ -44,12 +49,26 @@ class DataFormattingController:
     def format_get_ranking_user_response_body(ranking_result: List[Tuple[str, List[str]]]) -> TUserRankingResponseBody:
         return {"users": [{"telegram_id": telegram_id, "tags": tags} for telegram_id, tags in ranking_result]}
 
+    def format_get_event_users_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_get_event_users_response_body(users: List[UserDTO]) -> TUserRankingResponseBody:
+        return {"users": [{"telegram_id": user.telegram_id, "tags": user.tags} for user in users]}
+
     def format_get_is_admin_response_header(self, models_info: List[str]) -> Dict[str, str]:
         return self._format_base_response_header(models_info)
 
     @staticmethod
     def format_get_is_admin_response_body(is_admin: bool) -> TSuccessResponseBody:
         return {"success": is_admin}
+
+    def format_get_tags_by_user_response_header(self, models_info: List[str]) -> Dict[str, str]:
+        return self._format_base_response_header(models_info)
+
+    @staticmethod
+    def format_get_tags_by_user_response_body(tags: List[TagDTO]) -> TTagTitlesResponse:
+        return {"tags": [tag.title for tag in tags]}
 
     def get_user_create_dto_by_request_body(self, request_body: AddUserRequestBody) -> UserCreateDTO:
         return UserCreateDTO(telegram_id=request_body.telegram_id)
