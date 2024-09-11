@@ -61,7 +61,7 @@ class DatabaseController:
     def is_admin(self, user_telegram_id: str, event_title: str) -> bool:
         is_admin: bool = self._execute_repository_method(
             self._event_repository.is_admin,
-            telegram_id=user_telegram_id,
+            user_telegram_id=user_telegram_id,
             event_title=event_title,
         )
         return is_admin
