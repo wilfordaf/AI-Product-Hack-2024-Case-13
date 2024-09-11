@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 from typing import Any, Dict
+
 from linkedin_api import Linkedin
 from pdfminer.high_level import extract_text
 
@@ -40,39 +41,33 @@ def retrieve_json_data(text: str, from_id: str) -> str:
         raise ServiceError(f"При чтении json файла возникла ошибка: {str(e)}") from e
 
 
-def retrieve_linkedin_data(link: str, linked_username:str, linked_paswword:str) -> str:
+def retrieve_linkedin_data(link: str) -> str:
+    linked_username = os.getenv("LINKEDIN_USERNAME", "")
+    linked_password = os.getenv("LINKEDIN_PASSWORD", "")
+
     try:
-        api = Linkedin(linked_username, linked_paswword)
-        
-        if link[-1] == '/':
-            link = link[:-1]
-        profile_id = link.split('/')[-1]
-
-        profile = api.get_profile(profile_id)
-
-        summary = profile.get('summary')
-        location = profile.get('location')
-        skills = profile.get('skills')
-        speciality = profile.get('headline')
-    
-        if location:
-            basic_location = location.get('basicLocation', {})
-            country = basic_location.get('countryCode', 'None').upper()
-            city = basic_location.get('city', '')
-            
-            if city:
-                location_str = f"{city}, {country}"
-            else:
-                location_str = country
-        skills_str = ", ".join([skill['name'] for skill in skills]) if skills else "None"
-
-        text = (
-        f"Summary: {summary}\n"
-        f"Speciality: {speciality}\n"
-        f"Location: {location_str}\n"
-        f"Skills: {skills_str}"
-        )
-        return text
-    
+        api = Linkedin(linked_username, linked_password)
     except Exception as e:
-        raise Exception("Ошибка при подключении к LinkedIn")
+        raise ServiceError(f"Ошибка при подключении к LinkedIn {e}")
+
+    if link[-1] == "/":
+        link = link[:-1]
+
+    profile_id = link.split("/")[-1]
+    profile = api.get_profile(profile_id)
+
+    summary = profile.get("summary")
+    location = profile.get("location")
+    skills = profile.get("skills")
+    specialty = profile.get("headline")
+
+    if location:
+        basic_location = location.get("basicLocation", {})
+        country = basic_location.get("countryCode", "None").upper()
+        city = basic_location.get("city", "")
+        location_str = f"{city}, {country}" if city else country
+
+    skills_str = ", ".join([skill["name"] for skill in skills]) if skills else "None"
+
+    text = f"Summary: {summary}\n" f"Specialty: {specialty}\n" f"Location: {location_str}\n" f"Skills: {skills_str}"
+    return text
