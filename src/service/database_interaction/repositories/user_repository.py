@@ -28,13 +28,14 @@ class UserRepository:
             if not user:
                 return None
 
-            return UserDTO.model_validate(
+            user_dto: UserDTO = UserDTO.model_validate(
                 {
                     "id": user.id,
                     "telegram_id": user.telegram_id,
                     "tags": [tag.title for tag in user.tags],
                 }
             )
+            return user_dto
 
     def delete(self, user_id: int):
         with self._session_maker() as session:
