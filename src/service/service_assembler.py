@@ -10,15 +10,13 @@ from src.service.data_formatting.parsers.parsing_methods import (
 )
 from src.service.database_interaction import DatabaseController
 from src.service.entities.api_models.input import (
+    AddTagsByLinkUserRequestBody,
+    AddTagsByTextUserRequestBody,
     AddUserRequestBody,
     GetIsAdminRequestBody,
     GetRankingUserRequestBody,
-)
-from src.service.entities.api_models.input.add_tags_by_link_user_request_body import (
-    AddTagsByLinkUserRequestBody,
-)
-from src.service.entities.api_models.input.add_tags_by_text_user_request_body import (
-    AddTagsByTextUserRequestBody,
+    GetTagsByUserRequestBody,
+    GetUsersByEventRequestBody,
 )
 from src.service.models.ranking import CosineRankingModel
 from src.service.models.tag_generation import OllamaGenerationModel
@@ -118,7 +116,8 @@ class ServiceAssembler:
         return response
 
     def get_user_ranking_response(self, request_body: GetRankingUserRequestBody) -> TGenericResponse:
-        ranked_user_telegram_ids = self._ranking_model.perform_ranking(request_body.telegram_id, 5)
+        event_users = self._database_controller.get_users_by_event_title(request_body.event_title)
+        ranked_user_telegram_ids = self._ranking_model.perform_ranking(request_body.telegram_id, event_users, 5)
         response: TGenericResponse = {
             "header": self._data_formatting_controller.format_get_ranking_user_response_header(self._models),
             "body": self._data_formatting_controller.format_get_ranking_user_response_body(ranked_user_telegram_ids),
@@ -133,6 +132,24 @@ class ServiceAssembler:
             "body": self._data_formatting_controller.format_get_is_admin_response_body(is_admin),
         }
         self._logger.info(f"Formatted /user/get-ranking response: {response}")
+        return response
+
+    def get_users_by_event_response(self, request_body: GetUsersByEventRequestBody) -> TGenericResponse:
+        event_users = self._database_controller.get_users_by_event_title(request_body.event_title)
+        response: TGenericResponse = {
+            "header": self._data_formatting_controller.format_get_event_users_response_header(self._models),
+            "body": self._data_formatting_controller.format_get_event_users_response_body(event_users),
+        }
+        self._logger.info(f"Formatted /event/get-users response: {response}")
+        return response
+
+    def get_tags_by_user_response(self, request_body: GetTagsByUserRequestBody) -> TGenericResponse:
+        tags = self._database_controller.get_tags_by_user(request_body.telegram_id)
+        response: TGenericResponse = {
+            "header": self._data_formatting_controller.format_get_tags_by_user_response_header(self._models),
+            "body": self._data_formatting_controller.format_get_tags_by_user_response_body(tags),
+        }
+        self._logger.info(f"Formatted /user/get-tags response: {response}")
         return response
 
     def _add_tags_to_user(self, telegram_id: str, tags: List[str]) -> TGenericResponse:
