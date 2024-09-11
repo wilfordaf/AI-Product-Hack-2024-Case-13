@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # TODO: move credentials to git secrets / vault in production
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
       - OLLAMA_URL=http://ollama:11434
