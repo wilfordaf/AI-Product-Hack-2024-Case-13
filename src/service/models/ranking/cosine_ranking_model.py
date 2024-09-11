@@ -55,10 +55,13 @@ class CosineRankingModel(IRankingModel):
     def load_model(self) -> None:
         folder = self._DATA_PATH.as_posix()
 
-        self._index = faiss.read_index(f"{folder}/index.index")
-        self._id2tg = pickle.load(open(f"{folder}/id2tg.pickle", "rb"))
-        self._tg2id = pickle.load(open(f"{folder}/tg2id.pickle", "rb"))
-        self._storage = pickle.load(open(f"{folder}/storage.pickle", "rb"))
+        try:
+            self._index = faiss.read_index(f"{folder}/index.index")
+            self._id2tg = pickle.load(open(f"{folder}/id2tg.pickle", "rb"))
+            self._tg2id = pickle.load(open(f"{folder}/tg2id.pickle", "rb"))
+            self._storage = pickle.load(open(f"{folder}/storage.pickle", "rb"))
+        except Exception:
+            self._logger.warning(f"No files found for {self.info}, loading from scratch...")
 
     def save_model(self) -> None:
         folder = self._DATA_PATH.as_posix()
@@ -81,8 +84,10 @@ class CosineRankingModel(IRankingModel):
             tg = self._id2tg.get(id, "")
             if id == caller_id:
                 continue
+
             if tg not in event_user_ids_set:
                 continue
+
             tags = self._get_matched_tags(query, self._storage[id])
             response.append((tg, tags))
 
