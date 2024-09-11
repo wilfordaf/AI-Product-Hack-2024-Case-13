@@ -1,4 +1,5 @@
 import importlib
+import os
 from pathlib import Path
 from typing import List
 
@@ -10,17 +11,18 @@ from src.service.utils.logging import ConsoleLogger
 
 
 class OllamaGenerationModel(ITagGenerationModel):
-    _OLLAMA_URL = "http://localhost:11434/api/generate"
-    # TODO: подобрать модель
+    _OLLAMA_URL_VAR_NAME = "OLLAMA_URL"
     _PARAMS = {
         "stream": False,
-        "model": "llama3.1-8B",
+        "model": "jpacifico/chocolatine-3b",
         "system": "You are a helpful assistant. You must provide complete and clear answers.",
     }
     _PROMPT_PATH = Path(__file__).parent.resolve() / "prompts/test_prompt.txt"
     _REQUEST_TIMEOUT = 2 * 60
 
     def __init__(self, possible_tags: List[str]):
+        raw_connection_string = os.getenv(self._OLLAMA_URL_VAR_NAME, "http://localhost:11434")
+        self._connection_string = f"{raw_connection_string}/api/generate"
         try:
             self._version = getattr(importlib.import_module(".".join(self.__module__.split(".")[:-1])), "version")
         except AttributeError as e:
@@ -55,7 +57,7 @@ class OllamaGenerationModel(ITagGenerationModel):
         self._logger.debug(f"Generating tags for {text}")
         try:
             response: str = requests.post(
-                self._OLLAMA_URL,
+                self._connection_string,
                 json={**self._PARAMS, "prompt": text},
                 timeout=self._REQUEST_TIMEOUT,
             ).json()["response"]
