@@ -12,8 +12,10 @@ services:
       - "9090:9090"
     depends_on:
       - db
+      - ollama
     links:
       - db:db
+      - ollama:ollama
     restart: always
     networks:
       - app-network
@@ -28,20 +30,28 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
 
   ollama:
     image: ollama/ollama:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
     ports:
       - "11434:11434"
     restart: always
+    volumes:
+      - ./ollama_data:/root/.ollama
+      - ./bin/ollama-entrypoint.sh:/ollama-entrypoint.sh
     networks:
       - app-network
-
-volumes:
-  postgres_data:
+    entrypoint: ["/usr/bin/bash", "/ollama-entrypoint.sh"]
 
 networks:
   app-network:

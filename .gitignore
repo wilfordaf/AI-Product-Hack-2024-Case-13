@@ -170,3 +170,4 @@ data/interim/**
 data/processed/**
 
 postgres_data/**
+ollama_data/**
