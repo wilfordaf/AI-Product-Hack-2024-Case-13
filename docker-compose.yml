@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
+      - OLLAMA_URL=http://ollama:11434
     ports:
       - "9090:9090"
     depends_on:
@@ -28,6 +29,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    restart: always
     networks:
       - app-network
 
