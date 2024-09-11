@@ -21,8 +21,8 @@ class OllamaGenerationModel(ITagGenerationModel):
     _REQUEST_TIMEOUT = 2 * 60
 
     def __init__(self, possible_tags: List[str]):
-        raw_connection_string = os.getenv(self._OLLAMA_URL_VAR_NAME, "http://localhost:11434")
-        self._connection_string = f"{raw_connection_string}/api/generate"
+        self._raw_connection_string = os.getenv(self._OLLAMA_URL_VAR_NAME, "http://localhost:11434")
+        self._generate_connection_string = f"{self._raw_connection_string}/api/generate"
         try:
             self._version = getattr(importlib.import_module(".".join(self.__module__.split(".")[:-1])), "version")
         except AttributeError as e:
@@ -44,11 +44,9 @@ class OllamaGenerationModel(ITagGenerationModel):
 
     def load_model(self) -> None:
         try:
-            # TODO: uncomment
-            # status_code = requests.get("http://localhost:11434", timeout=2).status_code
-            status_code = 200
+            status_code = requests.get(self._raw_connection_string, timeout=2).status_code
         except requests.exceptions.RequestException as e:
-            raise ServiceError("Ollama server is not on host:port") from e
+            raise ServiceError(f"Ollama server is not on {self._raw_connection_string}") from e
 
         if status_code != 200:
             raise ServiceError("Ollama installation is not proper")
@@ -57,7 +55,7 @@ class OllamaGenerationModel(ITagGenerationModel):
         self._logger.debug(f"Generating tags for {text}")
         try:
             response: str = requests.post(
-                self._connection_string,
+                self._generate_connection_string,
                 json={**self._PARAMS, "prompt": text},
                 timeout=self._REQUEST_TIMEOUT,
             ).json()["response"]
