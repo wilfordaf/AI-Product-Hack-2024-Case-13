@@ -18,6 +18,20 @@ class IRankingModel(ABC):
         """
 
     @abstractmethod
+    def save_model(self) -> None:
+        """
+        Saves the model to disk.
+        """
+
+    @abstractmethod
+    def add_user(self, telegram_id: str, tags: List[str]) -> None:
+        """
+        Adds a user with his tags vector. This method is called before generating tags.
+        :param telegram_id: Telegram id of the user.
+        :param tags: User's tags.
+        """
+
+    @abstractmethod
     def perform_ranking(self, caller_telegram_id: str, event_user_ids, n: int) -> List[Tuple[str, List[str]]]:
         """
         Performs the ranking of users based on tags vectors.
