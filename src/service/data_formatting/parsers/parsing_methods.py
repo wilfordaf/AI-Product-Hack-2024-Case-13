@@ -57,7 +57,7 @@ def retrieve_linkedin_data(link: str, linked_username:str, linked_paswword:str) 
     
         if location:
             basic_location = location.get('basicLocation', {})
-            country = basic_location.get('countryCode', 'Нет данных').upper()
+            country = basic_location.get('countryCode', 'None').upper()
             city = basic_location.get('city', '')
             
             if city:
