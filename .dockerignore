@@ -4,6 +4,7 @@
 
 # Белый лист
 !/bin
+!/sql
 !/src
 !pyproject.toml
 !poetry.lock
