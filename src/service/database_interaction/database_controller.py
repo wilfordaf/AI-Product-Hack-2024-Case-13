@@ -62,10 +62,24 @@ class DatabaseController:
         all_tags: List[TagDTO] = self._execute_repository_method(self._tag_repository.get_all_tags)
         return all_tags
 
+    def get_tags_by_user(self, telegram_id: str) -> List[TagDTO]:
+        all_tags: List[TagDTO] = self._execute_repository_method(
+            self._tag_repository.get_tags_by_user_telegram_id,
+            telegram_id=telegram_id,
+        )
+        return all_tags
+
     def get_users_by_telegram_ids(self, telegram_ids: List[str]) -> List[UserDTO]:
         users: List[UserDTO] = self._execute_repository_method(
             self._user_repository.get_users_by_telegram_ids,
-            telegram_i=telegram_ids,
+            telegram_ids=telegram_ids,
+        )
+        return users
+
+    def get_users_by_event_title(self, event_title: str) -> List[UserDTO]:
+        users: List[UserDTO] = self._execute_repository_method(
+            self._event_repository.get_users_by_event_title,
+            event_title=event_title,
         )
         return users
 

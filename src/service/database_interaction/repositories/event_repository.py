@@ -3,6 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.service.database_interaction.dto.event import EventCreateDTO, EventDTO
+from src.service.database_interaction.dto.user import UserDTO
 from src.service.database_interaction.orm_models.events import Events
 from src.service.database_interaction.orm_models.users import Users
 
@@ -20,7 +21,7 @@ class EventRepository:
             event = Events(
                 title=event_create_dto.title,
                 description=event_create_dto.description,
-                admin=admin,  # Set the admin relationship
+                admin=admin,
             )
             session.add(event)
             session.commit()
@@ -63,3 +64,12 @@ class EventRepository:
                 return False
 
             return bool(event.admin_id == admin_user.id)
+
+    def get_users_by_event_title(self, event_title: str) -> List[UserDTO]:
+        with self._session_maker() as session:
+            event = session.query(Events).filter(Events.title == event_title).first()
+            if not event:
+                return []
+
+            users = event.users
+            return [UserDTO.model_validate(user) for user in users]

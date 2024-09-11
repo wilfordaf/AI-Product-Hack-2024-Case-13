@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.service.database_interaction.dto.tag import TagCreateDTO, TagDTO
 from src.service.database_interaction.orm_models.tags import Tags
+from src.service.database_interaction.orm_models.users import Users
 
 
 class TagRepository:
@@ -34,4 +35,14 @@ class TagRepository:
     def get_all_tags(self) -> List[TagDTO]:
         with self._session_maker() as session:
             tags = session.query(Tags).all()
+            return [TagDTO.model_validate(tag) for tag in tags]
+
+    def get_tags_by_user_telegram_id(self, telegram_id: str) -> List[TagDTO]:
+        with self._session_maker() as session:
+            user = session.query(Users).filter(Users.telegram_id == telegram_id).first()
+
+            if not user:
+                return []
+
+            tags = user.tags
             return [TagDTO.model_validate(tag) for tag in tags]
