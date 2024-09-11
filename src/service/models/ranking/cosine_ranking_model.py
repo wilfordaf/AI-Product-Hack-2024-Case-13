@@ -71,8 +71,8 @@ class CosineRankingModel(IRankingModel):
     def perform_ranking(self, caller_telegram_id: str, event_user_ids, n: int) -> List[Tuple[str, List[str]]]:
         if caller_telegram_id not in self._tg2id:
             raise ServiceError(f"User {caller_telegram_id} was not found in the ranking model")
-
         query = self._storage[self._tg2id.get(caller_telegram_id, 0)]
+        event_user_ids_set = set(event_user_ids)
 
         _, ids = self._index.search(query.reshape(1, -1), n)
         caller_id = self._tg2id.get(caller_telegram_id)
@@ -81,7 +81,8 @@ class CosineRankingModel(IRankingModel):
             tg = self._id2tg.get(id, "")
             if id == caller_id:
                 continue
-
+            if tg not in event_user_ids_set:
+                continue
             tags = self._get_matched_tags(query, self._storage[id])
             response.append((tg, tags))
 
