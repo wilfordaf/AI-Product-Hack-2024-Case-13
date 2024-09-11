@@ -8,6 +8,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
       - OLLAMA_URL=http://ollama:11434
+      - LINKEDIN_USERNAME=denchikmax228@gmail.com
+      - LINKEDIN_PASSWORD=hubai228322
     ports:
       - "9090:9090"
     depends_on:
