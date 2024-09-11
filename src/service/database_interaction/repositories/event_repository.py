@@ -76,7 +76,20 @@ class EventRepository:
                 return []
 
             users = event.users
-            return [UserDTO.model_validate(user) for user in users]
+
+            users_dto = []
+            for user in users:
+                tag_titles = [tag.title for tag in user.tags]
+                user_dto = UserDTO.model_validate(
+                    {
+                        "id": user.id,
+                        "telegram_id": user.telegram_id,
+                        "tags": tag_titles,
+                    }
+                )
+                users_dto.append(user_dto)
+
+            return users_dto
 
     def add_user_to_event(self, event_update_user_dto: EventUpdateUserDTO) -> None:
         with self._session_maker() as session:

@@ -25,7 +25,16 @@ class UserRepository:
     def read_by_telegram_id(self, telegram_id: str) -> Optional[UserDTO]:
         with self._session_maker() as session:
             user = session.query(Users).filter(Users.telegram_id == telegram_id).first()
-            return UserDTO.model_validate(user) if user else None
+            if not user:
+                return None
+
+            return UserDTO.model_validate(
+                {
+                    "id": user.id,
+                    "telegram_id": user.telegram_id,
+                    "tags": [tag.title for tag in user.tags],
+                }
+            )
 
     def delete(self, user_id: int):
         with self._session_maker() as session:
@@ -51,4 +60,17 @@ class UserRepository:
     def get_users_by_telegram_ids(self, telegram_ids: List[str]) -> List[UserDTO]:
         with self._session_maker() as session:
             users = session.query(Users).filter(Users.telegram_id.in_(telegram_ids)).all()
-            return [UserDTO.model_validate(user) for user in users]
+
+            users_dto = []
+            for user in users:
+                tag_titles = [tag.title for tag in user.tags]
+                user_dto = UserDTO.model_validate(
+                    {
+                        "id": user.id,
+                        "telegram_id": user.telegram_id,
+                        "tags": tag_titles,
+                    }
+                )
+                users_dto.append(user_dto)
+
+            return users_dto
