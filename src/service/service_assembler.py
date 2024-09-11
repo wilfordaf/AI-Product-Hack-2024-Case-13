@@ -194,6 +194,7 @@ class ServiceAssembler:
         user_update_dto.tag_titles = tags_to_add
         try:
             self._database_controller.update_user_tags(user_update_dto)
+            self._ranking_model.add_user(telegram_id, tags_to_add)
             success = True
         except ServiceError:
             success = False
