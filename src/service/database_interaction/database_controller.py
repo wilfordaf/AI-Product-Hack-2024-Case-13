@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 from typing import Any, Callable, List
 
-from sqlalchemy import create_engine, make_url
+from sqlalchemy import create_engine, make_url, text
 from sqlalchemy.orm import sessionmaker
 
 from src.service.database_interaction.dto.event import (
@@ -25,16 +26,16 @@ from src.service.utils.logging import ConsoleLogger
 
 class DatabaseController:
     _CONNECTION_STRING_VAR_NAME = "DATABASE_URL"
+    _SQL_SCRIPTS_DIR = Path(__file__).parents[3] / "sql"
 
     def __init__(self):
         raw_connection_string = os.getenv(self._CONNECTION_STRING_VAR_NAME, "")
         self._logger = ConsoleLogger()
         try:
             connection_url = make_url(raw_connection_string)
-            engine = create_engine(connection_url)
-            Base.metadata.create_all(bind=engine)
-
-            self._session_maker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+            self._engine = create_engine(connection_url)
+            Base.metadata.create_all(bind=self._engine)
+            self._session_maker = sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
         except Exception as e:
             self._logger.critical(f"Failed to connect to database: {e}")
             raise ServiceError("Connection to DB Failed")
@@ -44,6 +45,9 @@ class DatabaseController:
         self._tag_repository = TagRepository(self._session_maker)
         self._event_repository = EventRepository(self._session_maker)
         self._ranking_request_repository = RankingRequestRepository(self._session_maker)
+
+        # TODO: Remove in production
+        self._execute_example_startup_script()
 
     def add_user(self, user: UserCreateDTO) -> None:
         self._execute_repository_method(self._user_repository.create, user_create_dto=user)
@@ -95,6 +99,31 @@ class DatabaseController:
             self._event_repository.add_user_to_event,
             event_update_user_dto=event_update_user_dto,
         )
+
+    def _execute_example_startup_script(self) -> None:
+        if self.get_all_tags():
+            return
+
+        script_path = self._SQL_SCRIPTS_DIR / "example_startup.sql"
+        self._execute_sql_script(script_path)
+
+    def _execute_sql_script(self, script_path: Path) -> None:
+        if not script_path.exists():
+            self._logger.error(f"SQL script file '{script_path}' not found.")
+            raise ServiceError(f"SQL script file '{script_path}' not found.")
+
+        try:
+            with open(script_path) as file:
+                sql_script = file.read()
+
+            with self._engine.connect() as connection:
+                connection.execute(text(sql_script))
+                connection.commit()
+
+            self._logger.info(f"SQL script '{script_path}' executed successfully.")
+        except Exception as e:
+            self._logger.error(f"Failed to execute SQL script '{script_path}': {e}")
+            raise ServiceError(f"Failed to execute SQL script '{script_path}'")
 
     def _execute_repository_method(self, method: Callable[..., Any], **kwargs) -> Any:
         try:
