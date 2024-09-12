@@ -113,5 +113,8 @@ class DataFormattingController:
     def get_all_tag_names_by_tags_dto(self, tags_dto: List[TagDTO]) -> List[str]:
         return [tag.title for tag in tags_dto]
 
+    def get_user_telegram_ids_by_users_dto(self, users_dto: List[UserDTO]) -> List[str]:
+        return [user_dto.telegram_id for user_dto in users_dto]
+
     def _format_base_response_header(self, models_info: List[str]) -> Dict[str, str]:
         return self._api_version | {f"model_{i}": model_info for i, model_info in enumerate(models_info, 1)}

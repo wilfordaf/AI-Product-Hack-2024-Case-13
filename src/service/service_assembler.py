@@ -121,7 +121,8 @@ class ServiceAssembler:
 
     def get_user_ranking_response(self, request_body: GetRankingUserRequestBody) -> TGenericResponse:
         event_users = self._database_controller.get_users_by_event_title(request_body.event_title)
-        ranked_user_telegram_ids = self._ranking_model.perform_ranking(request_body.telegram_id, event_users, 5)
+        event_user_ids = self._data_formatting_controller.get_user_telegram_ids_by_users_dto(event_users)
+        ranked_user_telegram_ids = self._ranking_model.perform_ranking(request_body.telegram_id, event_user_ids, 5)
         response: TGenericResponse = {
             "header": self._data_formatting_controller.format_get_ranking_user_response_header(self._models),
             "body": self._data_formatting_controller.format_get_ranking_user_response_body(ranked_user_telegram_ids),
