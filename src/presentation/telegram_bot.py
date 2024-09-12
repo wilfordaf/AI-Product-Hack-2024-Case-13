@@ -1,14 +1,22 @@
-from email import message_from_string
-from types import NoneType
-
 import telebot
 from button_texts import *
 from message_texts import *
+from src.service.entities.api_models.input import AddUserRequestBody
 from test_data import *
 from telebot import types
 import re
+import os
+from src.service.service_assembler import ServiceAssembler
+#
+# from pdfminer.high_level import extract_text
+#     with open(file_path) as temp_file:
+#         extracted_text: str = extract_text(temp_file)
+#         return extracted_text
 
-bot = telebot.TeleBot('7370956091:AAHbL15SauJFpQFz_YrpYNWDlCgQf6ckkGM')
+telegram_key = os.getenv("TELEGRAM_KEY", "")
+
+bot = telebot.TeleBot(telegram_key)
+service = ServiceAssembler()
 
 event_name = 'AI Product Hack'
 
@@ -53,7 +61,7 @@ def open_main_page(message):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    # TODO: Запрос на "бэк" на регистрацию пользователя
+    service.get_add_user_response({message.from_user.username})
     markup_start = types.ReplyKeyboardMarkup()
     markup_start.row(join_event_button, create_event_button)
     markup_start.row(open_event_list_button, open_profile_list_button)
@@ -77,8 +85,6 @@ def main_page_handler(message):
     else:
         bot.send_message(message.chat.id, handler_not_found_message_text, reply_markup=types.ReplyKeyboardRemove())
         open_main_page(message)
-    # if message.text == '':
-    #     bot.send_message(message.chat.id, '')
 
 def open_confirm_page(message, yes_handler, no_handler):
     confirm_markup = types.ReplyKeyboardMarkup()
@@ -98,26 +104,25 @@ def confirm_handler(message, yes_handler, no_handler):
 def create_event_handler(message):
     global event_name
     event_name = message.text
-    # TODO: Вызов AddEvent(id, навзание, описание)
+    service.get_add_event_response({message.from_user.username, message.text, message.text})
     bot.send_message(message.chat.id, event_was_created_message_text(event_name))
     open_event_page(message)
 
 def join_event_handler(message):
-    # TODO: Запрос на подключение к событию (id, название).
-    # Если success, то
-    if message.text == some_key or message.text == "1":
-        open_event_page(message)
-    # иначе
-    elif message.text == go_to_main_page_text:
+    if message.text == go_to_main_page_text:
         open_main_page(message)
     elif message.text == try_again_text:
         bot.register_next_step_handler(message, join_event_handler)
     else:
-        markup_join_event = types.ReplyKeyboardMarkup()
-        markup_join_event.row(go_to_main_page_button, repeat_button)
-        bot.send_message(message.chat.id, event_not_found_message_text,
-                         reply_markup=markup_join_event)
-        bot.register_next_step_handler(message, join_event_handler)
+        success = service.get_add_user_to_event_response({message.from_user.username, event_name})["body"]["success"]
+        if success:
+            open_event_page(message, False)
+        else:
+            markup_join_event = types.ReplyKeyboardMarkup()
+            markup_join_event.row(go_to_main_page_button, repeat_button)
+            bot.send_message(message.chat.id, event_not_found_message_text,
+                             reply_markup=markup_join_event)
+            bot.register_next_step_handler(message, join_event_handler)
 
 def open_admin_panel_page(message):
     admin_markup = types.ReplyKeyboardMarkup()
@@ -128,18 +133,16 @@ def open_admin_panel_page(message):
     bot.register_next_step_handler(message, handle_admin_panel)
 
 def handle_admin_panel(message):
-    #TODO: запрос GetUsersByEvent(event_title)
+    participants = service.get_users_by_event_response({message.from_user.username, event_name})["body"]
     string_text = list_participants_of_event_message_text(event_name)
-    for candidate in candidates_list:
-        string_text += create_user_with_match_message(candidate)
+    for participant in participants:
+        string_text += create_user_with_match_message(participant)
     bot.send_message(message.chat.id, string_text,
                      reply_markup=people_list_markup)
     bot.register_next_step_handler(message, handle_people_list)
 
-def open_event_page(message):
-    has_profile_in_event = True
-    is_admin = True
-    # TODO: запрос GetIsAdmin(telegram_id, event_title)
+def open_event_page(message, has_profile_in_event = True):
+    is_admin = service.get_is_admin_response({message.from_user.username, event_name})["body"]["success"]
     event_page_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if has_profile_in_event:
         delete_profile_from_event_button = types.KeyboardButton(delete_profile_from_event_text)
@@ -187,9 +190,9 @@ def create_user_with_match_message(user):
     return result
 
 def open_match_list(message):
+    candidates = service.get_user_ranking_response({message.from_user.username, event_name})["body"]["users"]
     string_text = list_candidates_from_event_message_text(event_name)
-    # TODO: запрос списка  get_user_ranking_response()
-    for candidate in candidates_list:
+    for candidate in candidates:
         string_text += create_user_with_match_message(candidate)
     bot.send_message(message.chat.id, string_text,
                      reply_markup=people_list_markup)
@@ -264,18 +267,8 @@ def handle_add_description(message):
 
 def is_valid_url(url):
     regex = re.compile(
-        r'^(?:http|ftp)s?://'  # http:// или https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # домен
-        r'localhost|'  # localhost
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # IP-адрес
-        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # IPv6-адрес
-        r'(?::\d+)?'  # порт
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r'^(https?:\/\/)?www.linkedin.com([\/\w .-]*)*\/?$', re.IGNORECASE)
     return re.match(regex, url) is not None
-    # # TODO: исправить
-    # pattern = r'/https?:\/\/\S+\.\S+/g'
-    # match = re.fullmatch(pattern, url)
-    # return True if match else False
 
 def handle_add_link_to_profile(message):
     if is_valid_url(message.text):
