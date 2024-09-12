@@ -1,3 +1,3 @@
-from .model_info_type import TModelInfo
+from .user_type import TUser
 
-__all__ = ["TModelInfo"]
+__all__ = ["TUser"]

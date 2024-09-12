@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "case_13"
+name = "src"
 version = "0.0.1"
 description = "AI Product Hack Case 13"
 authors = [
@@ -15,11 +15,12 @@ python = "^3.11"
 pandas = ">=2.2.0"
 fastapi = ">=0.104.1"
 uvicorn = "0.24.0"
-psutil = "^6.0.0"
-prometheus-fastapi-instrumentator = "^7.0.0"
 sqlalchemy = "^2.0.34"
 psycopg2-binary = "^2.9.9"
 requests = "^2.32.3"
+pdfminer-six = "^20240706"
+linkedin-api = "^2.3.0"
+faiss-cpu = "^1.8.0.post1"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.3"

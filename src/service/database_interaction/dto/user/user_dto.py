@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -6,3 +8,4 @@ class UserDTO(BaseModel):
 
     id: int
     telegram_id: str
+    tags: List[str]

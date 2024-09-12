@@ -4,9 +4,7 @@
 
 # Белый лист
 !/bin
-!/bia_incident
-!/model
-!/configs
-!/ml_data_engine
-!main.py
+!/sql
+!/src
 !pyproject.toml
+!poetry.lock
