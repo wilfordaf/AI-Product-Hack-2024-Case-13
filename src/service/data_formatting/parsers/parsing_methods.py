@@ -12,7 +12,7 @@ from src.service.utils.exceptions.service_error import ServiceError
 def retrieve_pdf_data(text: str) -> str:
     try:
         with tempfile.TemporaryDirectory() as dirname:
-            file_path = os.path.join(dirname, "tempfile.txt")
+            file_path = os.path.join(dirname, "tempfile.pdf")
 
             with open(file_path, "w") as temp_file:
                 temp_file.write(text)
