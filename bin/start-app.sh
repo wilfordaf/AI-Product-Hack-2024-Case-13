@@ -11,4 +11,4 @@ while ! nc -z ollama 11434; do
 done
 
 echo "Satellite services are up - executing command"
-uvicorn src.entrypoint.api_ui:app --host 0.0.0.0 --port 9090
+python3 /root/src/src/src/entrypoint/entrypoint.py --api
