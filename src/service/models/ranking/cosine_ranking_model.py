@@ -42,9 +42,9 @@ class CosineRankingModel(IRankingModel):
         if telegram_id in self._tg2id:
             self._logger.debug(f"User {telegram_id} was already added to the ranking model")
 
-        user_vector = self._vectorize(tags, normalize=True)
+        user_vector = self._vectorize(tags, normalize=False)
 
-        self._index.add(user_vector)
+        self._index.add(user_vector.reshape(1, -1))
         self._storage.append(user_vector)
 
         self._id2tg[len(self._id2tg)] = telegram_id
@@ -102,7 +102,7 @@ class CosineRankingModel(IRankingModel):
         return matched
 
     def _vectorize(self, tags: List[str], normalize: bool = True) -> npt.NDArray[np.float32]:
-        vector = np.zeros(len(self._possible_tags), dtype=np.uint8)
+        vector = np.zeros(len(self._possible_tags), dtype=np.float32)
 
         for idx, tag in enumerate(self._possible_tags):
             if tag in tags:
