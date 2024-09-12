@@ -2,6 +2,8 @@ import argparse
 import subprocess
 import sys
 
+SCRIPT_BASE_PATH = "/root/src/src/src/entrypoint"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Choose between API or Telegram UI")
@@ -11,7 +13,8 @@ def parse_args():
 
 def run_script(script_name: str):
     try:
-        subprocess.run([sys.executable, script_name], check=True)
+        script_path = f"{SCRIPT_BASE_PATH}/{script_name}"
+        subprocess.run([sys.executable, script_path], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error occurred while running {script_name}: {e}")
 
