@@ -42,7 +42,9 @@
 
 ## Схема приложения📊
 
-<img src="https://github.com/wilfordaf/AI-Product-Hack-2024-Case-13/blob/dev/docs/images/README_diag.png?raw=true" width="200" />
+<p align="center">
+<img src="https://github.com/wilfordaf/AI-Product-Hack-2024-Case-13/blob/dev/docs/images/README_diag.png?raw=true" width="800" />
+</p>
 
 
 ## Инструкция по установке приложения📋
