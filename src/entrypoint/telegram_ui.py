@@ -20,6 +20,8 @@ from src.service.entities.api_models.input import (
     GetUsersByEventRequestBody,
 )
 from src.service.service_assembler import ServiceAssembler
+import os
+import tempfile
 
 telegram_key = os.getenv("TELEGRAM_KEY", "")
 
@@ -334,18 +336,21 @@ def handle_upload_dialogs(message):
 
 def read_pdf(message):
     file_info = bot.get_file(message.document.file_id)
+    file_info.file_path
     downloaded_file = bot.download_file(file_info.file_path)
-    result = ''
-    with open('temp.pdf', 'wb') as temp_file:
-        temp_file.write(downloaded_file)
+    result = ""
 
-    try:
-        result = extract_text('temp.pdf')
-    except Exception as e:
-        bot.reply_to(message, f"Ошибка при извлечении текста: {e}")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        file_path = os.path.join(tmpdirname, "tempfile.pdf")
 
-    import os
-    os.remove('temp.pdf')
+        with open(file_path, "wb") as temp_file:
+            temp_file.write(downloaded_file)
+
+            try:
+                result = extract_text(file_path)
+            except Exception as e:
+                bot.reply_to(message, f"Ошибка при извлечении текста: {e}")
+
     return result
 
 
