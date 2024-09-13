@@ -6,9 +6,6 @@ import re
 import os
 import json
 from pdfminer.high_level import extract_text
-            with open(file_path) as temp_file:
-                extracted_text: str = extract_text(temp_file)
-                return extracted_text
 
 from src.service.service_assembler import ServiceAssembler
 
@@ -283,6 +280,11 @@ def handle_upload_dialogs(message):
     finally:
         open_event_page(message)
 
+def read_pdf(file_path):
+    with open(file_path) as temp_file:
+        extracted_text: str = extract_text(temp_file)
+        return extracted_text
+
 def handle_add_cv(message):
     try:
         file_info = bot.get_file(message.document.file_id)
@@ -290,7 +292,7 @@ def handle_add_cv(message):
         file_type = message.document.mime_type
         if file_type.startswith('application/pdf'):
             try:
-                data = extract_text(file_info)
+                data = read_pdf(file_info)
                 service.get_add_tags_by_cv_to_user_response({message.from_user.username, data})
                 bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
             except:
