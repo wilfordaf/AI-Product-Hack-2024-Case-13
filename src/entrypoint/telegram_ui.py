@@ -8,6 +8,7 @@ from telebot import types
 
 from src.presentation.button_texts import *
 from src.presentation.message_texts import *
+from src.service.data_formatting.parsers.parsing_methods import retrieve_json_data
 from src.service.entities.api_models.input import (
     AddEventRequestBody,
     AddTagsByLinkUserRequestBody,
@@ -307,34 +308,41 @@ def handle_upload(message):
         open_event_page(message)
 
 
-def read_json_file(message):
+def read_json_file(message, from_user_id):
     file_info = bot.get_file(message.document.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
     file_content = downloaded_file.decode("utf-8")
-    return file_content
+    logger.critical(file_content)
+    relevant_message_data = retrieve_json_data(file_content, from_user_id)
+    logger.critical(relevant_message_data)
+    return relevant_message_data
 
 
 def handle_upload_dialogs(message):
+    from_user_id = f"user{message.from_user.id}"
+    logger.critical(from_user_id)
+    from_user_username = message.from_user.username
+    logger.critical(from_user_username)
     try:
         file_type = message.document.mime_type
         if file_type.startswith("application/json"):
-            dialogs = read_json_file(message)
-            # print(dialogs)
+            dialogs = read_json_file(message, from_user_id)
+            logger.critical(dialogs)
             if dialogs != "":
                 request_body = AddTagsByTextUserRequestBody.model_validate(
                     {
-                        "telegram_id": f"user{message.from_user.id}",
+                        "telegram_id": from_user_username,
                         "text": dialogs,
                     }
                 )
-                service.get_add_tags_by_dialogue_to_user_response(request_body)
+                service.get_add_tags_by_text_to_user_response(request_body)
                 bot.reply_to(message, "Файл загружен")
             else:
                 bot.reply_to(message, "Не найдено содержимое в файле")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
     except Exception:
-        bot.reply_to(message, f"Не удалось прочитать файл")
+        bot.reply_to(message, "Не удалось прочитать файл")
     finally:
         open_event_page(message)
 
