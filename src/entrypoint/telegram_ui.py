@@ -42,7 +42,7 @@ join_event_button = types.KeyboardButton(join_event_text)
 
 create_event_button = types.KeyboardButton(create_event_text)
 open_event_list_button = types.KeyboardButton(open_event_list_text)
-open_profile_list_button = types.KeyboardButton(open_profile_list_text)
+open_my_tags_list_button = types.KeyboardButton(open_my_tags_list_text)
 go_to_save_profiles_button = types.KeyboardButton(go_to_save_profiles_text)
 
 add_data_button = types.KeyboardButton(add_data_text)
@@ -65,7 +65,7 @@ people_list_markup.add(go_to_main_page_button)
 def open_main_page(message):
     markup_main = types.ReplyKeyboardMarkup()
     markup_main.row(join_event_button, create_event_button)
-    markup_main.row(open_event_list_button, open_profile_list_button)
+    markup_main.row(open_event_list_button, open_my_tags_list_button)
     markup_main.add(go_to_save_profiles_button)
     bot.send_message(message.chat.id, open_main_page_message_text, reply_markup=markup_main)
     bot.register_next_step_handler(message, main_page_handler)
@@ -79,7 +79,7 @@ def start(message):
     finally:
         markup_start = types.ReplyKeyboardMarkup()
         markup_start.row(join_event_button, create_event_button)
-        markup_start.row(open_event_list_button, open_profile_list_button)
+        markup_start.row(open_event_list_button, open_my_tags_list_button)
         bot.send_message(message.chat.id, welcome_message_text, reply_markup=markup_start)
         bot.register_next_step_handler(message, main_page_handler)
 
@@ -95,12 +95,27 @@ def main_page_handler(message):
     elif message.text == go_to_save_profiles_text:
         bot.send_message(message.chat.id, saved_profiles_doesnt_exist, reply_markup=types.ReplyKeyboardRemove())
         open_main_page(message)
-    elif message.text == open_profile_list_text:
-        bot.send_message(message.chat.id, user_profiles_doesnt_exist, reply_markup=types.ReplyKeyboardRemove())
-        open_main_page(message)
+    elif message.text == open_my_tags_list_text:
+        show_my_tags(message)
     else:
         bot.send_message(message.chat.id, handler_not_found_message_text, reply_markup=types.ReplyKeyboardRemove())
         open_main_page(message)
+
+
+def show_my_tags(message):
+    try:
+        request_body = GetTagsByUserRequestBody.model_validate(
+            {"telegram_id": message.from_user.username}
+        )
+        tags = service.get_add_user_to_event_response(request_body)["body"]["tags"]
+        result = 'На основании загруженных ранее данных, модель смогла определить следующие теги: \n'
+        for tag in tags:
+            result += f'🔘 {tag}\n'
+        bot.send_message(message.chat.id, result)
+    except Exeption:
+        bot.send_message(message.chat.id, 'Теги не найдены. Попробуйте добавить информацию о себе, '
+                                          'находясь на странице события')
+    bot.register_next_step_handler(message, main_page_handler)
 
 
 def open_confirm_page(message, yes_handler, no_handler):
