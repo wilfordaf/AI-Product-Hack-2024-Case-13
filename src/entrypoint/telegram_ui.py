@@ -60,7 +60,7 @@ def open_main_page(message):
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    service.get_add_user_response({message.from_user.username})
+    service.get_add_user_response({"telegram_id": message.from_user.username})
     markup_start = types.ReplyKeyboardMarkup()
     markup_start.row(join_event_button, create_event_button)
     markup_start.row(open_event_list_button, open_profile_list_button)
@@ -106,7 +106,8 @@ def confirm_handler(message, yes_handler, no_handler):
 def create_event_handler(message):
     global event_name
     event_name = message.text
-    service.get_add_event_response({message.from_user.username, message.text, message.text})
+    service.get_add_event_response({"admin_telegram_id": message.from_user.username, "title": message.text,
+                                    "description": message.text})
     bot.send_message(message.chat.id, event_was_created_message_text(event_name))
     open_event_page(message)
 
@@ -117,7 +118,8 @@ def join_event_handler(message):
     elif message.text == try_again_text:
         bot.register_next_step_handler(message, join_event_handler)
     else:
-        success = service.get_add_user_to_event_response({message.from_user.username, event_name})["body"]["success"]
+        success = service.get_add_user_to_event_response({"telegram_id": message.from_user.username,
+                                                          "title": event_name})["body"]["success"]
         if success:
             open_event_page(message, False)
         else:
@@ -136,7 +138,7 @@ def open_admin_panel_page(message):
 
 
 def handle_admin_panel(message):
-    participants = service.get_users_by_event_response({message.from_user.username, event_name})["body"]
+    participants = service.get_users_by_event_response({"event_title": event_name})["body"]
     string_text = list_participants_of_event_message_text(event_name)
     for participant in participants:
         string_text += create_user_with_match_message(participant)
@@ -145,7 +147,8 @@ def handle_admin_panel(message):
 
 
 def open_event_page(message, has_profile_in_event=True):
-    is_admin = service.get_is_admin_response({message.from_user.username, event_name})["body"]["success"]
+    is_admin = service.get_is_admin_response({"telegram_id": message.from_user.username,
+                                              "event_title": event_name})["body"]["success"]
     event_page_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if has_profile_in_event:
         delete_profile_from_event_button = types.KeyboardButton(delete_profile_from_event_text)
@@ -199,7 +202,8 @@ def create_user_with_match_message(user):
 
 
 def open_match_list(message):
-    candidates = service.get_user_ranking_response({message.from_user.username, event_name})["body"]["users"]
+    candidates = service.get_user_ranking_response({"telegram_id": message.from_user.username,
+                                                    "event_title": event_name})["body"]["users"]
     string_text = list_candidates_from_event_message_text(event_name)
     for candidate in candidates:
         string_text += create_user_with_match_message(candidate)
@@ -289,7 +293,8 @@ def handle_upload_dialogs(message):
         if file_type.startswith("application/json"):
             dialogs = read_json_file(file_info)
             if dialogs != False:
-                service.get_add_tags_by_dialogue_to_user_response({message.from_user.username, dialogs})
+                service.get_add_tags_by_dialogue_to_user_response({"telegram_id": message.from_user.username,
+                                                                   "text": dialogs})
                 bot.reply_to(message, "Файл загружен")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
@@ -313,7 +318,8 @@ def handle_add_cv(message):
         if file_type.startswith("application/pdf"):
             try:
                 data = read_pdf(file_info)
-                service.get_add_tags_by_cv_to_user_response({message.from_user.username, data})
+                service.get_add_tags_by_cv_to_user_response({"telegram_id": message.from_user.username,
+                                                             "text": data})
                 bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
             except:
                 bot.reply_to(message, f"Не удалось загрузить файл {file_name}")
@@ -327,7 +333,8 @@ def handle_add_cv(message):
 
 def handle_add_description(message):
     if message.text != cancel_text:
-        service.get_add_tags_by_text_to_user_response({message.from_user.username, message.text})
+        service.get_add_tags_by_text_to_user_response({"telegram_id": message.from_user.username,
+                                                       "text": message.text})
         bot.send_message(message.chat.id, description_was_saved)
     open_event_page(message)
 
@@ -339,7 +346,8 @@ def is_valid_url(url):
 
 def handle_add_link_to_profile(message):
     if is_valid_url(message.text):
-        service.get_add_tags_by_link_to_user_response({message.from_user.username, message.text})
+        service.get_add_tags_by_link_to_user_response({"telegram_id": message.from_user.username,
+                                                       "link": message.text})
         bot.send_message(message.chat.id, link_was_added)
     else:
         bot.send_message(message.chat.id, uncorrect_link_message_text)
