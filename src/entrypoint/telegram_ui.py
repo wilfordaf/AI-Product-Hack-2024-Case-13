@@ -96,26 +96,26 @@ def main_page_handler(message):
         bot.send_message(message.chat.id, saved_profiles_doesnt_exist, reply_markup=types.ReplyKeyboardRemove())
         open_main_page(message)
     elif message.text == open_my_tags_list_text:
-        show_my_tags(message)
+        show_my_tags(message, main_page_handler)
     else:
         bot.send_message(message.chat.id, handler_not_found_message_text, reply_markup=types.ReplyKeyboardRemove())
         open_main_page(message)
 
 
-def show_my_tags(message):
+def show_my_tags(message, base_method):
     try:
         request_body = GetTagsByUserRequestBody.model_validate(
             {"telegram_id": message.from_user.username}
         )
         tags = service.get_add_user_to_event_response(request_body)["body"]["tags"]
-        result = 'На основании загруженных ранее данных, модель смогла определить следующие теги: \n'
+        result = 'На основании загруженных ранее данных модель смогла определить следующие теги: \n'
         for tag in tags:
             result += f'🔘 {tag}\n'
         bot.send_message(message.chat.id, result)
     except Exeption:
         bot.send_message(message.chat.id, 'Теги не найдены. Попробуйте добавить информацию о себе, '
                                           'находясь на странице события')
-    bot.register_next_step_handler(message, main_page_handler)
+    bot.register_next_step_handler(message, base_method)
 
 
 def open_confirm_page(message, yes_handler, no_handler):
@@ -197,10 +197,11 @@ def open_event_page(message, has_profile_in_event=True):
     is_admin = service.get_is_admin_response(request_body)["body"]["success"]
     event_page_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if has_profile_in_event:
-        delete_profile_from_event_button = types.KeyboardButton(delete_profile_from_event_text)
+        # delete_profile_from_event_button = types.KeyboardButton(delete_profile_from_event_text)
         find_match_button = types.KeyboardButton(find_match_text)
         event_page_markup.row(add_data_button, find_match_button)
-        event_page_markup.row(delete_data_button, delete_profile_from_event_button)
+        # event_page_markup.row(delete_data_button, delete_profile_from_event_button)
+        event_page_markup.add(open_my_tags_list_button)
     else:
         event_page_markup.add(add_data_button)
     if is_admin:
@@ -233,6 +234,8 @@ def handle_event_page(message):
         open_main_page(message)
     elif message.text == go_to_admin_page_text:
         open_admin_panel_page(message)
+    elif message.text == open_my_tags_list_text:
+        show_my_tags(message, handle_event_page)
     else:
         bot.send_message(message.chat.id, handler_not_found_message_text)
         open_event_page(message)
