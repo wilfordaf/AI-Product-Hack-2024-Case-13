@@ -72,13 +72,14 @@ def open_main_page(message):
 @bot.message_handler(commands=["start"])
 def start(message):
     user = AddUserRequestBody.model_validate({"telegram_id": message.from_user.username})
-    service.get_add_user_response(user)
-    markup_start = types.ReplyKeyboardMarkup()
-    markup_start.row(join_event_button, create_event_button)
-    markup_start.row(open_event_list_button, open_profile_list_button)
-    bot.send_message(message.chat.id, welcome_message_text, reply_markup=markup_start)
-    bot.register_next_step_handler(message, main_page_handler)
-
+    try:
+        service.get_add_user_response(user)
+    finally:
+        markup_start = types.ReplyKeyboardMarkup()
+        markup_start.row(join_event_button, create_event_button)
+        markup_start.row(open_event_list_button, open_profile_list_button)
+        bot.send_message(message.chat.id, welcome_message_text, reply_markup=markup_start)
+        bot.register_next_step_handler(message, main_page_handler)
 
 @bot.message_handler(commands=["main"])
 def main_page_handler(message):
@@ -118,12 +119,20 @@ def confirm_handler(message, yes_handler, no_handler):
 def create_event_handler(message):
     global event_name
     event_name = message.text
-    request_body = AddEventRequestBody.model_validate(
-        {"admin_telegram_id": message.from_user.username, "title": message.text, "description": message.text}
-    )
-    service.get_add_event_response(request_body)
-    bot.send_message(message.chat.id, event_was_created_message_text(event_name))
-    open_event_page(message)
+    try:
+        request_body = AddEventRequestBody.model_validate(
+            {"admin_telegram_id": message.from_user.username, "title": message.text, "description": message.text}
+        )
+        service.get_add_event_response(request_body)
+        request_body = AddUserToEventRequestBody.model_validate(
+            {"telegram_id": message.from_user.username, "title": event_name}
+        )
+        success = service.get_add_user_to_event_response(request_body)["body"]["success"]
+        bot.send_message(message.chat.id, event_was_created_message_text(event_name))
+        open_event_page(message)
+    except Exeption:
+        bot.send_message(message.chat.id, 'Такое событие уже существует')
+        open_main_page(message)
 
 
 def join_event_handler(message):
