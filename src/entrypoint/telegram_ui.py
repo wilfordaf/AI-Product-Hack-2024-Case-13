@@ -1,6 +1,6 @@
-import json
 import os
 import re
+import tempfile
 
 import telebot
 from pdfminer.high_level import extract_text
@@ -8,7 +8,6 @@ from telebot import types
 
 from src.presentation.button_texts import *
 from src.presentation.message_texts import *
-from src.service.data_formatting.parsers.parsing_methods import retrieve_json_data
 from src.service.entities.api_models.input import (
     AddEventRequestBody,
     AddTagsByLinkUserRequestBody,
@@ -20,13 +19,13 @@ from src.service.entities.api_models.input import (
     GetUsersByEventRequestBody,
 )
 from src.service.service_assembler import ServiceAssembler
-import os
-import tempfile
+from src.service.utils.logging import ConsoleLogger
 
 telegram_key = os.getenv("TELEGRAM_KEY", "")
 
 bot = telebot.TeleBot(telegram_key)
 service = ServiceAssembler()
+logger = ConsoleLogger()
 
 event_name = "AI Product Hack"
 
@@ -83,6 +82,7 @@ def start(message):
         bot.send_message(message.chat.id, welcome_message_text, reply_markup=markup_start)
         bot.register_next_step_handler(message, main_page_handler)
 
+
 @bot.message_handler(commands=["main"])
 def main_page_handler(message):
     if message.text == join_event_text:
@@ -133,7 +133,7 @@ def create_event_handler(message):
         bot.send_message(message.chat.id, event_was_created_message_text(event_name))
         open_event_page(message)
     except Exeption:
-        bot.send_message(message.chat.id, 'Такое событие уже существует')
+        bot.send_message(message.chat.id, "Такое событие уже существует")
         open_main_page(message)
 
 
@@ -310,7 +310,7 @@ def handle_upload(message):
 def read_json_file(message):
     file_info = bot.get_file(message.document.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
-    file_content = downloaded_file.decode('utf-8')
+    file_content = downloaded_file.decode("utf-8")
     return file_content
 
 
@@ -320,16 +320,20 @@ def handle_upload_dialogs(message):
         if file_type.startswith("application/json"):
             dialogs = read_json_file(message)
             # print(dialogs)
-            if dialogs != '':
-                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": f'user{message.from_user.id}',
-                                                                   "text": dialogs})
+            if dialogs != "":
+                request_body = AddTagsByTextUserRequestBody.model_validate(
+                    {
+                        "telegram_id": f"user{message.from_user.id}",
+                        "text": dialogs,
+                    }
+                )
                 service.get_add_tags_by_dialogue_to_user_response(request_body)
                 bot.reply_to(message, "Файл загружен")
             else:
                 bot.reply_to(message, "Не найдено содержимое в файле")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
-    except Exeption:
+    except Exception:
         bot.reply_to(message, f"Не удалось прочитать файл")
     finally:
         open_event_page(message)
@@ -337,7 +341,6 @@ def handle_upload_dialogs(message):
 
 def read_pdf(message):
     file_info = bot.get_file(message.document.file_id)
-    file_info.file_path
     downloaded_file = bot.download_file(file_info.file_path)
     result = ""
 
@@ -363,12 +366,16 @@ def handle_add_cv(message):
             try:
                 data = read_pdf(message)
                 # print(data)
-                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                             "text": data})
-                service.get_add_tags_by_cv_to_user_response(request_body)
+                request_body = AddTagsByTextUserRequestBody.model_validate(
+                    {
+                        "telegram_id": message.from_user.username,
+                        "text": data,
+                    }
+                )
+                service.get_add_tags_by_text_to_user_response(request_body)
                 bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
-            except:
-                bot.reply_to(message, f"Не удалось загрузить файл {file_name}")
+            except Exception as e:
+                bot.reply_to(message, f"Не удалось загрузить файл {file_name} {e}")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
     except:
