@@ -234,7 +234,8 @@ def open_match_list(message):
         {"telegram_id": message.from_user.username, "event_title": event_name}
     )
     candidates = service.get_user_ranking_response(request_body)["body"]["users"]
-    string_text = list_candidates_from_event_message_text(event_name)
+    print(candidates)
+    string_text = f'Список наиболее подходящих кандидатов из события "{event_name}": \n\n'
     for candidate in candidates:
         string_text += create_user_with_match_message(candidate)
     bot.send_message(message.chat.id, string_text, reply_markup=people_list_markup)
