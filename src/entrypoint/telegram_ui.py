@@ -276,13 +276,13 @@ def handle_upload(message):
     if message.document != None:
         handle_document(message)
     elif message.text == upload_dialog_text:
-        bot.send_message(message.chat.id, select_file_message_text)
+        bot.send_message(message.chat.id, select_file_message_text, reply_markup=cancel_markup)
         bot.register_next_step_handler(message, handle_upload_dialogs)
     elif message.text == upload_cv_text:
-        bot.send_message(message.chat.id, select_file_message_text)
+        bot.send_message(message.chat.id, select_file_message_text, reply_markup=cancel_markup)
         bot.register_next_step_handler(message, handle_add_cv)
     elif message.text == add_link_to_profile_text:
-        bot.send_message(message.chat.id, request_link_message_text)
+        bot.send_message(message.chat.id, request_link_message_text, reply_markup=cancel_markup)
         bot.register_next_step_handler(message, handle_add_link_to_profile)
     elif message.text == add_person_description_text:
         bot.send_message(message.chat.id, request_description_message_text, reply_markup=cancel_markup)
@@ -294,60 +294,61 @@ def handle_upload(message):
         open_event_page(message)
 
 
-def read_json_file(file_path):
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-            if "text" in data:
-                return data
-    except FileNotFoundError:
-        return False
-    except json.JSONDecodeError:
-        return False
+def read_json_file(message):
+    file_info = bot.get_file(message.document.file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    file_content = downloaded_file.decode('utf-8')
+    return file_content
 
 
 def handle_upload_dialogs(message):
     try:
-        file_info = bot.get_file(message.document.file_id)
-        # file_name = message.document.file_name
         file_type = message.document.mime_type
-        telegram_id = message.from_user.username
         if file_type.startswith("application/json"):
-            dialogs = retrieve_json_data(
-                open(file_info.file_path, encoding="utf-8").read(),
-                telegram_id,
-            )
-            if dialogs:
-                request_body = AddTagsByTextUserRequestBody.model_validate(
-                    {"telegram_id": message.from_user.username, "text": dialogs}
-                )
+            dialogs = read_json_file(message)
+            # print(dialogs)
+            if dialogs != '':
+                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
+                                                                   "text": dialogs})
                 service.get_add_tags_by_dialogue_to_user_response(request_body)
                 bot.reply_to(message, "Файл загружен")
+            else:
+                bot.reply_to(message, "Не найдено содержимое в файле")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
-    except Exception:
-        bot.reply_to(message, "Не удалось прочитать файл")
+    except Exeption:
+        bot.reply_to(message, f"Не удалось прочитать файл")
     finally:
         open_event_page(message)
 
 
-def read_pdf(file_path):
-    with open(file_path) as temp_file:
-        extracted_text: str = extract_text(temp_file)
-        return extracted_text
+def read_pdf(message):
+    file_info = bot.get_file(message.document.file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    result = ''
+    with open('temp.pdf', 'wb') as temp_file:
+        temp_file.write(downloaded_file)
+
+    try:
+        result = extract_text('temp.pdf')
+    except Exception as e:
+        bot.reply_to(message, f"Ошибка при извлечении текста: {e}")
+
+    import os
+    os.remove('temp.pdf')
+    return result
 
 
 def handle_add_cv(message):
     try:
-        file_info = bot.get_file(message.document.file_id)
         file_name = message.document.file_name
         file_type = message.document.mime_type
         if file_type.startswith("application/pdf"):
             try:
-                data = read_pdf(file_info)
-                request_body = AddTagsByTextUserRequestBody.model_validate(
-                    {"telegram_id": message.from_user.username, "text": data}
-                )
+                data = read_pdf(message)
+                # print(data)
+                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
+                                                             "text": data})
                 service.get_add_tags_by_cv_to_user_response(request_body)
                 bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
             except:
