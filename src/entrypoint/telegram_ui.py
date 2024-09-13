@@ -8,18 +8,18 @@ from telebot import types
 
 from src.presentation.button_texts import *
 from src.presentation.message_texts import *
-from src.service.service_assembler import ServiceAssembler
-
+from src.service.data_formatting.parsers.parsing_methods import retrieve_json_data
 from src.service.entities.api_models.input import (
+    AddEventRequestBody,
     AddTagsByLinkUserRequestBody,
     AddTagsByTextUserRequestBody,
     AddUserRequestBody,
     AddUserToEventRequestBody,
     GetIsAdminRequestBody,
     GetRankingUserRequestBody,
-    GetTagsByUserRequestBody,
     GetUsersByEventRequestBody,
 )
+from src.service.service_assembler import ServiceAssembler
 
 telegram_key = os.getenv("TELEGRAM_KEY", "")
 
@@ -118,8 +118,9 @@ def confirm_handler(message, yes_handler, no_handler):
 def create_event_handler(message):
     global event_name
     event_name = message.text
-    request_body = AddEventRequestBody.model_validate({"admin_telegram_id": message.from_user.username,
-                                                       "title": message.text, "description": message.text})
+    request_body = AddEventRequestBody.model_validate(
+        {"admin_telegram_id": message.from_user.username, "title": message.text, "description": message.text}
+    )
     service.get_add_event_response(request_body)
     bot.send_message(message.chat.id, event_was_created_message_text(event_name))
     open_event_page(message)
@@ -131,8 +132,9 @@ def join_event_handler(message):
     elif message.text == try_again_text:
         bot.register_next_step_handler(message, join_event_handler)
     else:
-        request_body = AddUserToEventRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                          "title": event_name})
+        request_body = AddUserToEventRequestBody.model_validate(
+            {"telegram_id": message.from_user.username, "title": event_name}
+        )
         success = service.get_add_user_to_event_response(request_body)["body"]["success"]
         if success:
             open_event_page(message, False)
@@ -162,8 +164,9 @@ def handle_admin_panel(message):
 
 
 def open_event_page(message, has_profile_in_event=True):
-    request_body = GetIsAdminRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                              "event_title": event_name})
+    request_body = GetIsAdminRequestBody.model_validate(
+        {"telegram_id": message.from_user.username, "event_title": event_name}
+    )
     is_admin = service.get_is_admin_response(request_body)["body"]["success"]
     event_page_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if has_profile_in_event:
@@ -218,8 +221,9 @@ def create_user_with_match_message(user):
 
 
 def open_match_list(message):
-    request_body = GetRankingUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                    "event_title": event_name})
+    request_body = GetRankingUserRequestBody.model_validate(
+        {"telegram_id": message.from_user.username, "event_title": event_name}
+    )
     candidates = service.get_user_ranking_response(request_body)["body"]["users"]
     string_text = list_candidates_from_event_message_text(event_name)
     for candidate in candidates:
@@ -305,26 +309,33 @@ def read_json_file(file_path):
 def handle_upload_dialogs(message):
     try:
         file_info = bot.get_file(message.document.file_id)
-        file_name = message.document.file_name
+        # file_name = message.document.file_name
         file_type = message.document.mime_type
+        telegram_id = message.from_user.username
         if file_type.startswith("application/json"):
-            dialogs = read_json_file(file_info)
-            if dialogs != False:
-                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                                   "text": dialogs})
+            dialogs = retrieve_json_data(
+                open(file_info.file_path, encoding="utf-8").read(),
+                telegram_id,
+            )
+            if dialogs:
+                request_body = AddTagsByTextUserRequestBody.model_validate(
+                    {"telegram_id": message.from_user.username, "text": dialogs}
+                )
                 service.get_add_tags_by_dialogue_to_user_response(request_body)
                 bot.reply_to(message, "Файл загружен")
         else:
             bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
-    except:
-        bot.reply_to(message, f"Не удалось прочитать файл")
+    except Exception:
+        bot.reply_to(message, "Не удалось прочитать файл")
     finally:
         open_event_page(message)
+
 
 def read_pdf(file_path):
     with open(file_path) as temp_file:
         extracted_text: str = extract_text(temp_file)
         return extracted_text
+
 
 def handle_add_cv(message):
     try:
@@ -334,8 +345,9 @@ def handle_add_cv(message):
         if file_type.startswith("application/pdf"):
             try:
                 data = read_pdf(file_info)
-                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                             "text": data})
+                request_body = AddTagsByTextUserRequestBody.model_validate(
+                    {"telegram_id": message.from_user.username, "text": data}
+                )
                 service.get_add_tags_by_cv_to_user_response(request_body)
                 bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
             except:
@@ -350,8 +362,9 @@ def handle_add_cv(message):
 
 def handle_add_description(message):
     if message.text != cancel_text:
-        request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                       "text": message.text})
+        request_body = AddTagsByTextUserRequestBody.model_validate(
+            {"telegram_id": message.from_user.username, "text": message.text}
+        )
         service.get_add_tags_by_text_to_user_response(request_body)
         bot.send_message(message.chat.id, description_was_saved)
     open_event_page(message)
@@ -364,8 +377,9 @@ def is_valid_url(url):
 
 def handle_add_link_to_profile(message):
     if is_valid_url(message.text):
-        request_body = AddTagsByLinkUserRequestBody.model_validate({"telegram_id": message.from_user.username,
-                                                       "link": message.text})
+        request_body = AddTagsByLinkUserRequestBody.model_validate(
+            {"telegram_id": message.from_user.username, "link": message.text}
+        )
         service.get_add_tags_by_link_to_user_response(request_body)
         bot.send_message(message.chat.id, link_was_added)
     else:
