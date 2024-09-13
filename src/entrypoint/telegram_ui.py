@@ -106,7 +106,7 @@ def main_page_handler(message):
 def show_my_tags(message):
     try:
         request_body = GetTagsByUserRequestBody.model_validate({"telegram_id": message.from_user.username})
-        tags = service.get_add_user_to_event_response(request_body)["body"]["tags"]
+        tags = service.get_tags_by_user_response(request_body)["body"]["tags"]
         result = "На основании загруженных ранее данных, модель смогла определить следующие теги: \n"
         for tag in tags:
             result += f"🔘 {tag}\n"
