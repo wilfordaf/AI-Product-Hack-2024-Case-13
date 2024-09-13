@@ -136,7 +136,7 @@ class ServiceAssembler:
             "header": self._data_formatting_controller.format_get_is_admin_response_header(self._models),
             "body": self._data_formatting_controller.format_get_is_admin_response_body(is_admin),
         }
-        self._logger.info(f"Formatted /user/get-ranking response: {response}")
+        self._logger.info(f"Formatted /user/is-admin response: {response}")
         return response
 
     def get_users_by_event_response(self, request_body: GetUsersByEventRequestBody) -> TGenericResponse:

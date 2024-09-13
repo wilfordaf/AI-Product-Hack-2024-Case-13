@@ -64,6 +64,7 @@ class OllamaGenerationModel(ITagGenerationModel):
         except KeyError as e:
             raise ServiceError(f"Incorrect response format: {e}") from e
 
+        self._logger.debug(response)
         return self._parse_response(response)
 
     def _parse_response(self, response: str) -> List[str]:

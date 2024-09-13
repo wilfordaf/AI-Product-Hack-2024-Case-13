@@ -11,7 +11,7 @@ join_event_text = '🔑 Присоединиться'
 
 create_event_text = '📄🖌 Создать мероприятие'
 open_event_list_text = '📆 Посмотреть список моих мероприятий'
-open_profile_list_text = '👩🏻‍🍳👩🏻‍🎓👩‍🌾 Посмотреть мои профили'
+open_my_tags_list_text = '👩🏻‍🍳👩🏻‍🎓👩‍🌾 Посмотреть мои теги'
 go_to_save_profiles_text = '👩‍🎨👩🏻‍🚀👨🏻‍⚖️ Открыть сохранённые профили'
 
 upload_dialog_text = '💬 Загрузить диалоги'
