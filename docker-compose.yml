@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # TODO: move credentials to git secrets / vault in production
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
+      - OLLAMA_URL=http://ollama:11434
+      - LINKEDIN_USERNAME=denchikmax228@gmail.com
+      - LINKEDIN_PASSWORD=hubai228322
+      - TELEGRAM_KEY=7370956091:AAHbL15SauJFpQFz_YrpYNWDlCgQf6ckkGM
+    ports:
+      - "9090:9090"
+    depends_on:
+      - db
+      - ollama
+    links:
+      - db:db
+      - ollama:ollama
+    restart: always
+    networks:
+      - app-network
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  ollama:
+    image: ollama/ollama:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
+    ports:
+      - "11434:11434"
+    restart: always
+    volumes:
+      - ./ollama_data:/root/.ollama
+      - ./bin/ollama-entrypoint.sh:/ollama-entrypoint.sh
+    networks:
+      - app-network
+    entrypoint: ["/usr/bin/bash", "/ollama-entrypoint.sh"]
+
+networks:
+  app-network:

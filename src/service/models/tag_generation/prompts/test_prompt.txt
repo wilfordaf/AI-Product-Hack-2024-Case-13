@@ -1,0 +1,52 @@
+EXAMPLE 1
+Text about person:
+```
+My name is Sergey. I am a 22 year old student of ITMO in Saint-Petersburg, Russia. I have a strong mathematical base, prize-winner of the Olympiad in mathematics. I have
+experience with Python and major ML frameworks. Solved NLP, CV, CF, Classic ML problems. Was an intern at BIA
+Technologies on an NLP task, achieved 92% accuracy in classification of write-off comments. Looking for a full-time
+position as a Junior ML Engineer.
+```
+Your answer:
+```
+"Age": ["20-29"],
+"Hobby": ["No information provided"]
+"Country": ["Russia"]
+"General Skills": ["Data Analysis", "Research"]
+"Job Role": ["Machine Learning Engineer"]
+```
+
+EXAMPLE 2
+Text about person:
+```
+Nickname pachura3
+
+learnpython|Then it sounds like a nightmare, because lots of things can go wrong: different formatting, tables split across multiple pages with headers repeated, unexpected comments etc.
+
+If it's a one-time task then I would do it, but if it's going to be a recurring thing, then PDF is definitively not a proper way of transferring financial data (unless its creator can ensure it will be always formatted exactly the same way).
+learnpython|Thanks again! From what I can see, **Poetry** is a great tool, but is it true that it is still not compliant with the **PEP 621** standard and it still uses e.g. `[tool.poetry]` instead of `[project]` section in `pyproject.toml`?
+learnpython|From what I understand, it is a common practice in Python to encode module version in its `__init__.py` file, e.g.
+```
+Your answer:
+```
+"Age": ["No information provided"],
+"Hobby": ["No information provided"]
+"Country": ["No information provided"]
+"General Skills": ["Python"]
+"Job Role": ["Python Trainee"]
+```
+
+Your task is to print list of all tags from given that are applicable from the text about person, describe him.
+If there is no info about category in text, print "No information provided". Explain your thought process.
+Tags by categories:
+```
+"Age": ["40-49", "20-29", "50-59", "30-39"]
+"Hobby": ["Fashion", "Art", "Movies", "Sports", "Music", "Business and entrepreneurship", "Outdoor activities", "Gardening", "Photography", "Nature"]
+"Country": ["India", "United States", "Brazil", "China", "Russia", "France", "United Kingdom", "Indonesia", "Germany", "Philippines"]
+"General Skills": ["Management", "Marketing", "Accounting", "Leadership", "Public Speaking", "Teamwork", "Leadership Development", "Strategic Planning", "Data Analysis", "Research"]
+"Job Role": ["Machine Learning Engineer", "MLOps Engineer", "System Software Engineer", "Frontend", "Data Engineer", "Backend", "Product Manager", "Database Developer", "Design", "Security Engineer"]
+```
+
+EXAMPLE 3
+Text about person:
+```{text}```
+Your answer:
