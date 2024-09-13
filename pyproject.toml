@@ -21,6 +21,7 @@ requests = "^2.32.3"
 pdfminer-six = "^20240706"
 linkedin-api = "^2.3.0"
 faiss-cpu = "^1.8.0.post1"
+telebot = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.3"

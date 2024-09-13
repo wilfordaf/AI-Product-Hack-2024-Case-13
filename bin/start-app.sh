@@ -11,4 +11,4 @@ while ! nc -z ollama 11434; do
 done
 
 echo "Satellite services are up - executing command"
-python3 /root/src/src/src/entrypoint/entrypoint.py --api
+python3 /root/src/src/src/entrypoint/entrypoint.py
