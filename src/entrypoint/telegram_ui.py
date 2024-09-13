@@ -166,10 +166,10 @@ def open_admin_panel_page(message):
 
 def handle_admin_panel(message):
     request_body = GetUsersByEventRequestBody.model_validate({"event_title": event_name})
-    participants = service.get_users_by_event_response(request_body)["body"]
+    participants = service.get_users_by_event_response(request_body)["body"]["users"]
     string_text = list_participants_of_event_message_text(event_name)
     for participant in participants:
-        string_text += create_user_with_match_message(participant)
+        string_text += f'@{participant["telegram_id"]} \n'
     bot.send_message(message.chat.id, string_text, reply_markup=people_list_markup)
     bot.register_next_step_handler(message, handle_people_list)
 
@@ -239,7 +239,8 @@ def open_match_list(message):
     print(candidates)
     string_text = f'Список наиболее подходящих кандидатов из события "{event_name}": \n\n'
     for candidate in candidates:
-        string_text += create_user_with_match_message(candidate)
+        if candidate["telegram_id"] != message.from_user.username:
+            string_text += create_user_with_match_message(candidate)
     bot.send_message(message.chat.id, string_text, reply_markup=people_list_markup)
     bot.register_next_step_handler(message, handle_people_list)
 
@@ -320,7 +321,7 @@ def handle_upload_dialogs(message):
             dialogs = read_json_file(message)
             # print(dialogs)
             if dialogs != '':
-                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": message.from_user.username,
+                request_body = AddTagsByTextUserRequestBody.model_validate({"telegram_id": f'user{message.from_user.id}',
                                                                    "text": dialogs})
                 service.get_add_tags_by_dialogue_to_user_response(request_body)
                 bot.reply_to(message, "Файл загружен")
