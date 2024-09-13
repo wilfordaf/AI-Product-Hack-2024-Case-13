@@ -17,6 +17,7 @@ from src.service.entities.api_models.input import (
     AddUserToEventRequestBody,
     GetIsAdminRequestBody,
     GetRankingUserRequestBody,
+    GetTagsByUserRequestBody,
     GetUsersByEventRequestBody,
 )
 from src.service.service_assembler import ServiceAssembler
@@ -104,17 +105,16 @@ def main_page_handler(message):
 
 def show_my_tags(message):
     try:
-        request_body = GetTagsByUserRequestBody.model_validate(
-            {"telegram_id": message.from_user.username}
-        )
+        request_body = GetTagsByUserRequestBody.model_validate({"telegram_id": message.from_user.username})
         tags = service.get_add_user_to_event_response(request_body)["body"]["tags"]
-        result = 'На основании загруженных ранее данных, модель смогла определить следующие теги: \n'
+        result = "На основании загруженных ранее данных, модель смогла определить следующие теги: \n"
         for tag in tags:
-            result += f'🔘 {tag}\n'
+            result += f"🔘 {tag}\n"
         bot.send_message(message.chat.id, result)
-    except Exeption:
-        bot.send_message(message.chat.id, 'Теги не найдены. Попробуйте добавить информацию о себе, '
-                                          'находясь на странице события')
+    except Exception:
+        bot.send_message(
+            message.chat.id, "Теги не найдены. Попробуйте добавить информацию о себе, " "находясь на странице события"
+        )
     bot.register_next_step_handler(message, main_page_handler)
 
 
