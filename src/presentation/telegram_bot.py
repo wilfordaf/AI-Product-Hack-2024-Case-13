@@ -1,17 +1,16 @@
 import telebot
 from button_texts import *
 from message_texts import *
-from src.service.entities.api_models.input import AddUserRequestBody
-from test_data import *
 from telebot import types
 import re
 import os
+import json
+from pdfminer.high_level import extract_text
+            with open(file_path) as temp_file:
+                extracted_text: str = extract_text(temp_file)
+                return extracted_text
+
 from src.service.service_assembler import ServiceAssembler
-#
-# from pdfminer.high_level import extract_text
-#     with open(file_path) as temp_file:
-#         extracted_text: str = extract_text(temp_file)
-#         return extracted_text
 
 telegram_key = os.getenv("TELEGRAM_KEY", "")
 
@@ -214,14 +213,10 @@ def handle_document(message):
     file_name = message.document.file_name
     file_type = message.document.mime_type
 
-    # Проверяем тип файла по MIME-типу
-    # TODO: вызовы методов добавления тегов
-    if file_type.startswith('image/'):
-        bot.reply_to(message, f"Загружен файл изображения: {file_name}")
-    elif file_type.startswith('application/pdf'):
-        bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
-    elif file_type.startswith('application/msword') or file_type.startswith('application/vnd.openxmlformats-officedocument.wordprocessingml.document'):
-        bot.reply_to(message, f"Загружен Word-документ: {file_name}")
+    if file_type.startswith('application/pdf'):
+        handle_add_cv(message)
+    elif file_type.startswith('application/json'):
+        handle_upload_dialogs(message)
     else:
         bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
     open_event_page(message)
@@ -244,10 +239,10 @@ def handle_upload(message):
         handle_document(message)
     elif message.text == upload_dialog_text:
         bot.send_message(message.chat.id, select_file_message_text)
-        bot.register_next_step_handler(message, handle_upload)
+        bot.register_next_step_handler(message, handle_upload_dialogs)
     elif message.text == upload_cv_text:
         bot.send_message(message.chat.id, select_file_message_text)
-        bot.register_next_step_handler(message, handle_upload)
+        bot.register_next_step_handler(message, handle_add_cv)
     elif message.text == add_link_to_profile_text:
         bot.send_message(message.chat.id, request_link_message_text)
         bot.register_next_step_handler(message, handle_add_link_to_profile)
@@ -260,8 +255,56 @@ def handle_upload(message):
         bot.send_message(message.chat.id, uncorrect_command_message_text)
         open_event_page(message)
 
+def read_json_file(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            if 'text' in data:
+                return data
+    except FileNotFoundError:
+        return False
+    except json.JSONDecodeError:
+        return False
+
+def handle_upload_dialogs(message):
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        file_name = message.document.file_name
+        file_type = message.document.mime_type
+        if file_type.startswith('application/json'):
+            dialogs = read_json_file(file_info)
+            if dialogs != False:
+                service.get_add_tags_by_dialogue_to_user_response({message.from_user.username, dialogs})
+                bot.reply_to(message, 'Файл загружен')
+        else:
+            bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
+    except:
+            bot.reply_to(message, f"Не удалось прочитать файл")
+    finally:
+        open_event_page(message)
+
+def handle_add_cv(message):
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        file_name = message.document.file_name
+        file_type = message.document.mime_type
+        if file_type.startswith('application/pdf'):
+            try:
+                data = extract_text(file_info)
+                service.get_add_tags_by_cv_to_user_response({message.from_user.username, data})
+                bot.reply_to(message, f"Загружен PDF-файл: {file_name}")
+            except:
+                bot.reply_to(message, f"Не удалось загрузить файл {file_name}")
+        else:
+            bot.reply_to(message, f"Файл типа {file_type} не поддерживается.")
+    except:
+            bot.reply_to(message, f"Не удалось прочитать файл")
+    finally:
+        open_event_page(message)
+
 def handle_add_description(message):
     if message.text != cancel_text:
+        service.get_add_tags_by_text_to_user_response({message.from_user.username, message.text})
         bot.send_message(message.chat.id, description_was_saved)
     open_event_page(message)
 
@@ -272,6 +315,7 @@ def is_valid_url(url):
 
 def handle_add_link_to_profile(message):
     if is_valid_url(message.text):
+        service.get_add_tags_by_link_to_user_response({message.from_user.username, message.text})
         bot.send_message(message.chat.id, link_was_added)
     else:
         bot.send_message(message.chat.id, uncorrect_link_message_text)
