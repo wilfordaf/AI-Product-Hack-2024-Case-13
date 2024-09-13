@@ -1,6 +1,6 @@
 import telebot
-from button_texts import *
-from message_texts import *
+from .button_texts import *
+from .message_texts import *
 from telebot import types
 import re
 import os
